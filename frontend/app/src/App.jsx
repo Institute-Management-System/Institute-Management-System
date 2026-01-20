@@ -19,6 +19,7 @@ import AdminProfile from "./pages/admin/AdminProfile";
 // ================= STUDENT IMPORTS =================
 import StudentDashboard from "./pages/students/Dashboard";
 import StudentProfile from "./pages/students/Profile";
+import StudentSubjects from "./pages/students/Subjects";
 
 
 // ================= TEACHER IMPORTS =================
@@ -51,6 +52,7 @@ const App = () => {
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="subjects" element={<StudentSubjects />} />
         </Route>
 
         {/* --- TEACHER ROUTES --- */}
