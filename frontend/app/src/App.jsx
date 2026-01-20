@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 
 // Auth
 import ForgetPassword from "./pages/ForgetPassword"; 
+import Register from "./pages/Register";
 
 const App = () => {
  
@@ -20,6 +21,7 @@ const App = () => {
 
          {/* GLOBAL AUTH ROUTES */}
         <Route path="/forget-password" element={<ForgetPassword />} />
+        <Route path="/register" element={<Register />} /> 
         
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
