@@ -54,7 +54,8 @@ const MainLayout = ({ role }) => {
     if (role === "admin") {
       return [
         // Admin links will go here
-        { path: "/admin/dashboard", label: "Dashboard", icon: <FaHome /> }
+        { path: "/admin/dashboard", label: "Dashboard", icon: <FaHome /> },
+      { path: "/admin/profile", label: "Profile", icon: <FaUser /> }
       ];
     } 
 
