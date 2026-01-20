@@ -69,6 +69,7 @@ const MainLayout = ({ role }) => {
     else if (role === "student") {
       return [
         // Student links will go here
+         { path: "/student/dashboard", label: "Dashboard", icon: <FaHome /> }
       ];
     }
 
