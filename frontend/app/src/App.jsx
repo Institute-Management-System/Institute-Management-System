@@ -5,7 +5,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 
 import Login from "./pages/Login";
-import './App.css'
+
+// Auth
+import ForgetPassword from "./pages/ForgetPassword"; 
 
 const App = () => {
  
@@ -15,6 +17,10 @@ const App = () => {
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
+
+         {/* GLOBAL AUTH ROUTES */}
+        <Route path="/forget-password" element={<ForgetPassword />} />
+        
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
     </>
