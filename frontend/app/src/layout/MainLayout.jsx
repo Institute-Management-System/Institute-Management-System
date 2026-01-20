@@ -81,7 +81,8 @@ const MainLayout = ({ role }) => {
       return [
         // Student links will go here
          { path: "/student/dashboard", label: "Dashboard", icon: <FaHome /> },
-         { path: "/student/profile", label: "Profile", icon: <FaUser /> }
+         { path: "/student/profile", label: "Profile", icon: <FaUser /> },
+          { path: "/student/subjects", label: "Subjects", icon: <FaBook /> }
       ];
     }
 
