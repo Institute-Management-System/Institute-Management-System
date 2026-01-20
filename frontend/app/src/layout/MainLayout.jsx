@@ -62,7 +62,16 @@ const MainLayout = ({ role }) => {
     else if (role === "teacher") {
       return [
         // Teacher links will go here
-         { path: "/teacher/dashboard", label: "Dashboard", icon: <FaHome /> }
+         { path: "/teacher/dashboard", label: "Dashboard", icon: <FaHome /> },
+          { path: "/teacher/profile", label: "Profile", icon: <FaUser /> },
+        { 
+          label: "Student Info", 
+          icon: <FaUserGraduate />, 
+          isDropdown: true, 
+          subLinks: [
+           
+          ]
+        }
       ];
     } 
 

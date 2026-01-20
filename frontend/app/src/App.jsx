@@ -20,7 +20,7 @@ import StudentDashboard from "./pages/students/Dashboard";
 
 // ================= TEACHER IMPORTS =================
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
-
+import TeacherProfile from "./pages/teacher/TeacherProfile";
 const App = () => {
  
   return (
@@ -50,6 +50,8 @@ const App = () => {
         <Route path="/teacher" element={<MainLayout role="teacher" />}>
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<TeacherDashboard />} />
+          <Route path="profile" element={<TeacherProfile />} />
+       
         </Route>
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
