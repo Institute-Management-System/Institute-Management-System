@@ -12,6 +12,9 @@ import Login from "./pages/Login";
 import ForgetPassword from "./pages/ForgetPassword"; 
 import Register from "./pages/Register";
 
+// ================= STUDENT IMPORTS =================
+import StudentDashboard from "./pages/students/Dashboard";
+
 // ================= TEACHER IMPORTS =================
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 
@@ -28,6 +31,12 @@ const App = () => {
         <Route path="/forget-password" element={<ForgetPassword />} />
         <Route path="/register" element={<Register />} /> 
         
+        {/* --- STUDENT ROUTES --- */}
+        <Route path="/student" element={<MainLayout role="student" />}>
+          <Route index element={<Navigate to="dashboard" />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
+        </Route>
+
         {/* --- TEACHER ROUTES --- */}
         <Route path="/teacher" element={<MainLayout role="teacher" />}>
           <Route index element={<Navigate to="dashboard" />} />
