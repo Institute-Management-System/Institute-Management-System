@@ -15,6 +15,7 @@ import Register from "./pages/Register";
 // ================= ADMIN IMPORTS =================
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfile from "./pages/admin/AdminProfile";
+import AdminAddUser from "./pages/admin/AdminAddUser";
 
 // ================= STUDENT IMPORTS =================
 import StudentDashboard from "./pages/students/Dashboard";
@@ -45,6 +46,8 @@ const App = () => {
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
+           <Route path="add-user" element={<AdminAddUser />} />
+
           </Route>
 
         {/* --- STUDENT ROUTES --- */}
