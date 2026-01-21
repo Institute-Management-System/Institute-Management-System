@@ -56,8 +56,9 @@ const MainLayout = ({ role }) => {
         // Admin links will go here
         { path: "/admin/dashboard", label: "Dashboard", icon: <FaHome /> },
       { path: "/admin/profile", label: "Profile", icon: <FaUser /> },
-      { path: "/admin/add-user", label: "Add User", icon: <FaUserPlus /> }
-      ];
+      { path: "/admin/add-user", label: "Add User", icon: <FaUserPlus /> },
+        { path: "/admin/students", label: "Students", icon: <FaUserGraduate /> },
+    ];
     } 
 
     // Teacher sidebar configuration
