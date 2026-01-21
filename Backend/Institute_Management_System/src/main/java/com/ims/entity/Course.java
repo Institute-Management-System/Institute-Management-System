@@ -19,5 +19,8 @@ public class Course extends BaseEntity {
 
     @Column(name = "timetable_path")
     private String timetablePath;
+    
+    @Column(name="Active")
+	private Boolean status = false;
 }
 
