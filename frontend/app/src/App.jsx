@@ -17,6 +17,9 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminAddUser from "./pages/admin/AdminAddUser";
 
+// Admin: Students
+import AdminStudentDashboard from "./pages/admin/AdminStudentDashboard";
+
 // ================= STUDENT IMPORTS =================
 import StudentDashboard from "./pages/students/Dashboard";
 import StudentProfile from "./pages/students/Profile";
@@ -49,7 +52,8 @@ const App = () => {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="profile" element={<AdminProfile />} />
            <Route path="add-user" element={<AdminAddUser />} />
-
+          {/* Admin: Student Management */}
+          <Route path="students" element={<AdminStudentDashboard />} />
           </Route>
 
         {/* --- STUDENT ROUTES --- */}
