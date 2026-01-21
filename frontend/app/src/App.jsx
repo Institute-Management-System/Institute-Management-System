@@ -33,6 +33,8 @@ import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 import TeacherStudentList from "./pages/teacher/TeacherStudentList";
 import TeacherEvaluateStudent from "./pages/teacher/TeacherEvaluateStudent";
+import TeacherStudentAttendance from "./pages/teacher/TeacherStudentAttendance";
+
 const App = () => {
  
   return (
@@ -73,6 +75,7 @@ const App = () => {
           <Route path="profile" element={<TeacherProfile />} />
           <Route path="student-list" element={<TeacherStudentList />} />
           <Route path="evaluate" element={<TeacherEvaluateStudent />} />
+          <Route path="student-attendance" element={<TeacherStudentAttendance />} />
         </Route>
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
