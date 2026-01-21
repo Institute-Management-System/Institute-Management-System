@@ -25,9 +25,12 @@ public class Notice extends BaseEntity {
     @Column(name = "publish_date")
     private LocalDate publishDate;
 
-    //@Enumerated(EnumType.STRING)
-    //@Column(name = "target_role")
-    //private Role targetRole;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_role")
+    private Role targetRole;
+    
+    @Column(name="Active")
+	private Boolean status = false;
 
 
     }
