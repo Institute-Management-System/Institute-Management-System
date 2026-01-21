@@ -25,6 +25,7 @@ import StudentDashboard from "./pages/students/Dashboard";
 import StudentProfile from "./pages/students/Profile";
 import StudentSubjects from "./pages/students/Subjects";
 import StudentSchedule from "./pages/students/Schedule";
+import StudentAttendance from "./pages/students/Attendance";
 
 
 // ================= TEACHER IMPORTS =================
@@ -62,6 +63,7 @@ const App = () => {
           <Route path="profile" element={<StudentProfile />} />
           <Route path="subjects" element={<StudentSubjects />} />
           <Route path="schedule" element={<StudentSchedule />} />
+          <Route path="attendance" element={<StudentAttendance />} />
         </Route>
 
         {/* --- TEACHER ROUTES --- */}
