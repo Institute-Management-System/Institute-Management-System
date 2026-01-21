@@ -71,7 +71,8 @@ const MainLayout = ({ role }) => {
           icon: <FaUserGraduate />, 
           isDropdown: true, 
           subLinks: [
-           { path: "/teacher/student-list", label: "Student List" }
+           { path: "/teacher/student-list", label: "Student List" },
+            { path: "/teacher/evaluate", label: "Evaluate Student" }
           ]
         }
       ];

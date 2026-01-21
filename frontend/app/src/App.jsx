@@ -28,7 +28,7 @@ import StudentSchedule from "./pages/students/Schedule";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 import TeacherStudentList from "./pages/teacher/TeacherStudentList";
-
+import TeacherEvaluateStudent from "./pages/teacher/TeacherEvaluateStudent";
 const App = () => {
  
   return (
@@ -65,7 +65,8 @@ const App = () => {
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<TeacherDashboard />} />
           <Route path="profile" element={<TeacherProfile />} />
-            <Route path="student-list" element={<TeacherStudentList />} />
+          <Route path="student-list" element={<TeacherStudentList />} />
+          <Route path="evaluate" element={<TeacherEvaluateStudent />} />
         </Route>
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
