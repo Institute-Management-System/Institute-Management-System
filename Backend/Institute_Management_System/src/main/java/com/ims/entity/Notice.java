@@ -1,10 +1,15 @@
 package com.ims.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "notices")
+@Getter
+@Setter
 @AttributeOverride(
     name = "id",
     column = @Column(name = "notice_id")
@@ -26,5 +31,4 @@ public class Notice extends BaseEntity {
 
 
     }
-}
 
