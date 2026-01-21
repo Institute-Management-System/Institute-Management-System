@@ -21,6 +21,7 @@ import AdminAddUser from "./pages/admin/AdminAddUser";
 import StudentDashboard from "./pages/students/Dashboard";
 import StudentProfile from "./pages/students/Profile";
 import StudentSubjects from "./pages/students/Subjects";
+import StudentSchedule from "./pages/students/Schedule";
 
 
 // ================= TEACHER IMPORTS =================
@@ -56,6 +57,7 @@ const App = () => {
           <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="subjects" element={<StudentSubjects />} />
+          <Route path="schedule" element={<StudentSchedule />} />
         </Route>
 
         {/* --- TEACHER ROUTES --- */}
