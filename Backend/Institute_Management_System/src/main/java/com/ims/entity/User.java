@@ -44,43 +44,39 @@ public class User extends BaseEntity{
 	@Column(name="email", nullable=false, unique=true, length=100)
 	private String email;
 	
-	@Column(name="phone", length=50)
+	@Column(name="phone", nullable=false, unique=true, length=50)
 	private String phone;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name="gender", length=500)
 	private GENDER Gender;
 	
-	@Column(name="dob")
+	@Column(name="dob" , nullable=false)
 	private LocalDate dob;
 	
-	@Column(name="address", length=500)
+	@Column(name="address", nullable=false, length=500)
 	private String address;
 	
 	@Column(name="profile_image", length=500)
 	private String profileImage;
 	
-	@Column(name="admission_date")
+	@Column(name="admission_date" , nullable=false)
 	private LocalDate admissionDate;
 	
-	@Column(name="qualification", length=100)
+	@Column(name="qualification", nullable=false, length=100)
 	private String qualification;
 	
-	@Column(name="roll_number", length=100)
+	@Column(name="roll_number",nullable=false, length=100)
 	private String rollNumber;
 	
-	@Column(name="designation", length=100)
+	@Column(name="designation", nullable=false, length=100)
 	private String designation;
 	
 	@Column(name="last_login")
 	private LocalDateTime lastLogin;
 	
-	@Enumerated(EnumType.STRING)
 	@Column(name="Active")
-	private STATUS status = STATUS.ACTIVE;
-	
-	@Column(name="deleted_at")
-	private LocalDateTime deletedAt;
+	private Boolean status = false;
 }
 
 
