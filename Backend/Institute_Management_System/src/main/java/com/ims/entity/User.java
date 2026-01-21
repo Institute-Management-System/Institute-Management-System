@@ -1,5 +1,5 @@
 package com.ims.entity;
 
-public class User {
- 
+public class User{
+	
 }
