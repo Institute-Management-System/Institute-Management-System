@@ -12,7 +12,7 @@ import lombok.*;
 @AttributeOverride(name = "id", column = @Column(name = "attendance_id"))
 
 @Entity
-@Table(name = "attendance")
+@Table(name = "attendences")
 public class Attendence extends BaseEntity {
 
     @ManyToOne

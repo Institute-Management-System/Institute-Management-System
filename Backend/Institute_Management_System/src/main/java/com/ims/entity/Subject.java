@@ -22,7 +22,7 @@ import lombok.Setter;
 //JPA Annotations
 @Entity
 @Table(name="subjects")
-public class Subject {
+public class Subject extends BaseEntity{
 		
 	@Column(name = "name", nullable = false, length = 100)
 	private String name;

@@ -10,10 +10,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AttributeOverride(name = "id", column =@Column(name = "enrollments_id"))
 
 @Entity
 @Table(name = "enrollments")
-public class Enrollments {
+public class Enrollments extends BaseEntity {
     
 	@ManyToOne
 	@JoinColumn(name = "user_id")
