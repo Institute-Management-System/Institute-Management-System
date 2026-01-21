@@ -73,7 +73,8 @@ const MainLayout = ({ role }) => {
           isDropdown: true, 
           subLinks: [
            { path: "/teacher/student-list", label: "Student List" },
-            { path: "/teacher/evaluate", label: "Evaluate Student" }
+            { path: "/teacher/evaluate", label: "Evaluate Student" },
+            { path: "/teacher/student-attendance", label: "Student Attendance" }
           ]
         }
       ];
