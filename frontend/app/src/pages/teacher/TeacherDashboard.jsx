@@ -19,7 +19,7 @@ const TeacherDashboard = () => {
   useEffect(() => {
     // Dummy backend data (later you will fetch from API)
     const backendStats = [
-      { title: "TOTAL STUDENTS", value: "500", subtext: "Enrolled in particular subject" },
+      { title: "TOTAL STUDENTS", value: "500", subtext: "" },
       { title: "SALARY", value: "50,000", subtext: "Credited for this month" },
       { title: "ATTENDANCE", value: "75/100", subtext: "Average Class Attendance" }
     ];
