@@ -24,6 +24,9 @@ import AdminStudentDashboard from "./pages/admin/AdminStudentDashboard";
 //Admin: Teachers
 import AdminTeacherDashboard from "./pages/admin/AdminTeacherDashboard";
 
+// Admin: Courses & Subjects
+import AdminCourseList from "./pages/admin/AdminCourseList";
+
 // ================= STUDENT IMPORTS =================
 import StudentDashboard from "./pages/students/Dashboard";
 import StudentProfile from "./pages/students/Profile";
@@ -61,8 +64,13 @@ const App = () => {
            <Route path="add-user" element={<AdminAddUser />} />
           {/* Admin: Student Management */}
           <Route path="students" element={<AdminStudentDashboard />} />
+
           {/* Admin: Teacher Management */}
           <Route path="teachers" element={<AdminTeacherDashboard />} />
+
+          {/* Admin: Academic - Courses */}
+          <Route path="courses" element={<AdminCourseList />} />
+
           </Route>
           
 
