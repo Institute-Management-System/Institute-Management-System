@@ -94,7 +94,8 @@ const MainLayout = ({ role }) => {
          { path: "/student/profile", label: "Profile", icon: <FaUser /> },
           { path: "/student/subjects", label: "Subjects", icon: <FaBook /> },
           { path: "/student/schedule", label: "Schedule", icon: <FaClipboardList /> },
-          { path: "/student/attendance", label: "Attendance", icon: <FaClipboardList /> }
+          { path: "/student/attendance", label: "Attendance", icon: <FaClipboardList /> },
+          { path: "/student/marks", label: "Marks", icon: <FaBook /> }
       ];
     }
 
