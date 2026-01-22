@@ -61,8 +61,13 @@ const App = () => {
            <Route path="add-user" element={<AdminAddUser />} />
           {/* Admin: Student Management */}
           <Route path="students" element={<AdminStudentDashboard />} />
+
           {/* Admin: Teacher Management */}
           <Route path="teachers" element={<AdminTeacherDashboard />} />
+
+          {/* Admin: Academic - Courses */}
+          <Route path="courses" element={<AdminCourseList />} />
+          
           </Route>
           
 
