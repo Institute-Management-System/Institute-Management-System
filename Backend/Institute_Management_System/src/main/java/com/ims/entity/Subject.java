@@ -30,6 +30,9 @@ public class Subject extends BaseEntity{
 	@Column(name="description", length=500)
 	private String description;
 	
+	@Column(name="duration", length=500)
+	private String duration;
+	
 	@ManyToOne
 	@JoinColumn(name = "course_id", nullable = false)
 	private Course course;

@@ -32,7 +32,7 @@ public class Marks extends BaseEntity{
 	
 	@ManyToOne
 	@JoinColumn(name = "student_id")
-	private User student;
+	private User user;
 	
 	@Column(name="obtained_marks")
 	private int obtainedMarks;

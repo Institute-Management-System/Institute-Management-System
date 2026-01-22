@@ -16,13 +16,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString(callSuper = true)
 @AttributeOverride(name="id",column = @Column(name="user_id") )
-
 
 @Entity
 @Table(name = "users")

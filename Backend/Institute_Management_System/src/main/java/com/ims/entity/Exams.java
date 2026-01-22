@@ -31,7 +31,7 @@ public class Exams extends BaseEntity{
 	
 	@ManyToOne
 	@JoinColumn(name = "subject_id") 
-	private Subject stuject;
+	private Subject subject;
 	
 	@Column(name = "exam_date")
 	private LocalDate examDate;
