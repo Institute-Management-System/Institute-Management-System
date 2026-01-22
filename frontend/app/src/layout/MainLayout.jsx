@@ -60,6 +60,7 @@ const MainLayout = ({ role }) => {
         { path: "/admin/students", label: "Students", icon: <FaUserGraduate /> },
         { path: "/admin/teachers", label: "Teachers", icon: <FaChalkboardTeacher /> },
         { path: "/admin/courses", label: "Courses", icon: <FaBook /> },
+        { path: "/admin/subjects", label: "Subjects", icon: <FaClipboardList /> },
     ];
     } 
 
