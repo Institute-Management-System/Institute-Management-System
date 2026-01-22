@@ -17,8 +17,12 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminAddUser from "./pages/admin/AdminAddUser";
 
+
 // Admin: Students
 import AdminStudentDashboard from "./pages/admin/AdminStudentDashboard";
+
+//Admin: Teachers
+import AdminTeacherDashboard from "./pages/admin/AdminTeacherDashboard";
 
 // ================= STUDENT IMPORTS =================
 import StudentDashboard from "./pages/students/Dashboard";
@@ -56,7 +60,10 @@ const App = () => {
            <Route path="add-user" element={<AdminAddUser />} />
           {/* Admin: Student Management */}
           <Route path="students" element={<AdminStudentDashboard />} />
+          {/* Admin: Teacher Management */}
+          <Route path="teachers" element={<AdminTeacherDashboard />} />
           </Route>
+          
 
         {/* --- STUDENT ROUTES --- */}
         <Route path="/student" element={<MainLayout role="student" />}>

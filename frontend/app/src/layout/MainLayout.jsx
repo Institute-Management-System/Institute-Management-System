@@ -58,6 +58,7 @@ const MainLayout = ({ role }) => {
       { path: "/admin/profile", label: "Profile", icon: <FaUser /> },
       { path: "/admin/add-user", label: "Add User", icon: <FaUserPlus /> },
         { path: "/admin/students", label: "Students", icon: <FaUserGraduate /> },
+        { path: "/admin/teachers", label: "Teachers", icon: <FaChalkboardTeacher /> },
     ];
     } 
 
