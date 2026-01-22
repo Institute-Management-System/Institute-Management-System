@@ -40,7 +40,7 @@ import StudentProfile from "./pages/students/Profile";
 import StudentSubjects from "./pages/students/Subjects";
 import StudentSchedule from "./pages/students/Schedule";
 import StudentAttendance from "./pages/students/Attendance";
-import TeacherSchedule from "./pages/teacher/TeacherSchedule";
+import StudentMarks from "./pages/students/Marks";
 
 // ================= TEACHER IMPORTS =================
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -49,6 +49,7 @@ import TeacherStudentList from "./pages/teacher/TeacherStudentList";
 import TeacherEvaluateStudent from "./pages/teacher/TeacherEvaluateStudent";
 import TeacherStudentAttendance from "./pages/teacher/TeacherStudentAttendance";
 import TeacherSubjects from "./pages/teacher/TeacherSubjects";
+import TeacherSchedule from "./pages/teacher/TeacherSchedule";
 
 const App = () => {
  
@@ -97,6 +98,7 @@ const App = () => {
           <Route path="subjects" element={<StudentSubjects />} />
           <Route path="schedule" element={<StudentSchedule />} />
           <Route path="attendance" element={<StudentAttendance />} />
+          <Route path="marks" element={<StudentMarks />} />
         </Route>
 
         {/* --- TEACHER ROUTES --- */}
