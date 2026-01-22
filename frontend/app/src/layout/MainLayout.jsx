@@ -78,7 +78,8 @@ const MainLayout = ({ role }) => {
            { path: "/teacher/student-attendance", label: "Student Attendance" }
           ]
         },
-         { path: "/teacher/mysubjects", label: "My Subjects", icon: <FaBook /> }
+         { path: "/teacher/mysubjects", label: "My Subjects", icon: <FaBook /> },
+         { path: "/teacher/schedule", label: "Schedule", icon: <FaClipboardList /> }
       ];
     } 
 
