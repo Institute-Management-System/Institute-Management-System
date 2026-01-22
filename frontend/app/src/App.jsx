@@ -38,6 +38,7 @@ import TeacherProfile from "./pages/teacher/TeacherProfile";
 import TeacherStudentList from "./pages/teacher/TeacherStudentList";
 import TeacherEvaluateStudent from "./pages/teacher/TeacherEvaluateStudent";
 import TeacherStudentAttendance from "./pages/teacher/TeacherStudentAttendance";
+import TeacherSubjects from "./pages/teacher/TeacherSubjects";
 
 const App = () => {
  
@@ -83,6 +84,7 @@ const App = () => {
           <Route path="student-list" element={<TeacherStudentList />} />
           <Route path="evaluate" element={<TeacherEvaluateStudent />} />
           <Route path="student-attendance" element={<TeacherStudentAttendance />} />
+           <Route path="mysubjects" element={<TeacherSubjects />} />
         </Route>
          </Routes>
       <ToastContainer position="top-right" autoClose={3000} />
