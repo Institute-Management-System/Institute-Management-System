@@ -21,7 +21,7 @@ import AdminAddUser from "./pages/admin/AdminAddUser";
 // Admin: Students
 import AdminStudentDashboard from "./pages/admin/AdminStudentDashboard";
 import AdminAddStudent from "./pages/admin/AdminAddStudent";
-
+import AdminStudentList from "./pages/admin/AdminStudentList";
 
 //Admin: Teachers
 import AdminTeacherDashboard from "./pages/admin/AdminTeacherDashboard";
@@ -76,6 +76,7 @@ const App = () => {
           {/* Admin: Student Management */}
           <Route path="students" element={<AdminStudentDashboard />} />
           <Route path="students/add" element={<AdminAddStudent />} />
+          <Route path="students/list" element={<AdminStudentList />} />
           
           {/* Admin: Teacher Management */}
           <Route path="teachers" element={<AdminTeacherDashboard />} />
