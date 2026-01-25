@@ -1,4 +1,4 @@
-# ![Institute Management System](./assets/ims-logo.png)
+# ![Institute Management System](./docs/logo.jpeg)
 
 <p align="center">
 
@@ -20,11 +20,14 @@
 
 ### 🔎 Project Overview
 
-The **Institute Management System (IMS)** is a **full-stack web application** designed to automate and manage academic and administrative operations within an educational institute.
+## 🔎 Project Description
 
-The system streamlines workflows such as **student and faculty management, course handling, attendance, examinations, fees, timetables, and notices**, providing a secure and role-based digital platform.
+The **Institute Management System (IMS)** is a full-stack web application designed to simplify and automate academic and administrative activities in an educational institute. It replaces manual and scattered processes with a centralized digital platform, improving efficiency and accuracy.
 
-IMS is developed using **React JS**, **Spring Boot**, and **MySQL**, ensuring scalability, security, and efficient data management.
+The system manages essential functions such as **student and faculty management, course and subject handling, attendance tracking, examinations, fee management, and notice sharing**. It uses **role-based access control (RBAC)** to ensure that **Admins, Teachers, and Students** can securely access only the features and data related to their roles.
+
+IMS is built using **React JS** for the frontend, **Spring Boot** for the backend, and **MySQL** for data storage. It follows a **RESTful architecture** and is designed to be **secure, scalable, and easy to maintain**, making it suitable for real-world institutional use.
+
 
 ---
 
@@ -76,7 +79,6 @@ IMS is developed using **React JS**, **Spring Boot**, and **MySQL**, ensuring sc
 
 ### Backend
 - **Spring Boot**
-- Spring MVC
 - Spring Security
 - RESTful APIs
 
@@ -123,17 +125,18 @@ IMS is developed using **React JS**, **Spring Boot**, and **MySQL**, ensuring sc
 | Team Members | GitHub Profile | LinkedIn Profile |
 |-------------|---------------|------------------|
 | **Prathamesh Pimpalkar** | [GitHub](https://github.com/pimpalkarprathamesh) | [LinkedIn](https://www.linkedin.com/in/prathamesh-pimpalkar-5a9545204/) |
-| **Teerth Budhauliya** | [GitHub](https://github.com/tanmay183) | [LinkedIn](https://www.linkedin.com/in/tanmay-nigade-0ba002230/) |
-| **Dheeraj Ghosh** | [GitHub](https://github.com/suyash332) | [LinkedIn](https://www.linkedin.com/in/suyash-khodade/) |
-| **Harshal Pachpande** | [GitHub](https://github.com/StudiYash) | [LinkedIn](https://www.linkedin.com/in/yash-shukla-2024aiguy/) |
+| **Teerth Budhauliya** | [GitHub](https://github.com/Teerth63064) | [LinkedIn](https://www.linkedin.com/in/teerth-budhauliya-a2928a300) |
+| **Dheeraj Ghosh** | [GitHub](https://github.com/dheerajghosh007) | [LinkedIn](https://www.linkedin.com/in/dheerajghosh007/) |
+| **Harshal Pachpande** | [GitHub](https://github.com/harshal82002) | [LinkedIn](https://www.linkedin.com/in/harshal83) |
 
 ---
 
 ## 🎓 Project Guide
 
-| Guide | Role |
-|------|------|
-| **Mrs. Pooja Jaiswal** | Project Mentor |
+| Guide | GitHub | LinkedIn |
+|------|--------|----------|
+| **Mrs. Pooja Jaiswal** | [GitHub](https://github.com/PoojaJaiswalCDAC)  | [LinkedIn](https://www.linkedin.com/in/pooja-jaiswal-a6a094192) |
+
 
 ---
 
@@ -146,24 +149,3 @@ IMS is developed using **React JS**, **Spring Boot**, and **MySQL**, ensuring sc
 - Mobile application support
 
 ---
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
-
----
-
-## 🤝 Contributions
-
-Contributions are welcome!
-
-1. Fork the repository  
-2. Create a new branch  
-3. Commit your changes  
-4. Open a Pull Request  
-
----
-
-## ❤️ Acknowledgements
-
-Special thanks to our project guide and institute for their continuous guidance and support throughout the development of this project.
