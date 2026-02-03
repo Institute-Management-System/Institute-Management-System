@@ -1,23 +1,18 @@
 package com.ims.dto;
 
-import java.time.LocalDate;
-
-import com.ims.entity.Status;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class AttendanceTableResponse {
-
-    private LocalDate attendanceDate;
-    private Status status;
+public class SubjectMarksResponse {
+    private Long markId;
+    private String courseName;
     private String subjectName;
+    private int obtainedMarks;
+    private int totalMarks;
 }
