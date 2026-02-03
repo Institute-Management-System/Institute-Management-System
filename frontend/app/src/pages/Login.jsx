@@ -1,150 +1,182 @@
-// Import React and useState hook for managing component state
+// React hooks for state and lifecycle
 import React, { useState } from "react";
 
-// useNavigate is used for programmatic navigation (redirecting users)
+// React Router hook for navigation
 import { useNavigate } from "react-router-dom";
 
-// Toast components for showing popup notifications
+// Toast notifications for success/error feedback
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Importing logo image from assets folder
-import Logo from "../assets/Logo.png"; 
+// Logo asset
+import Logo from "../assets/Logo.png";
 
-// Login functional component
+// Axios API instance
+import API from "../api";
+
+// i18n hook for multilingual support
+import { useTranslation } from "react-i18next";
+
+// Language switcher component
+import LanguageSwitcher from "../components/LanguageSwitcher";
+
 const Login = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // navigate is used to redirect user after successful login
+  // Navigation handler
   const navigate = useNavigate();
 
-  // role state to store selected role (student/teacher/admin)
-  const [role, setRole] = useState("student");
+  // Username/email input
+  const [username, setUsername] = useState("");
 
-  // email state to store email input
-  const [email, setEmail] = useState("");
-
-  // password state to store password input
+  // Password input
   const [password, setPassword] = useState("");
 
-  // Function executed when login form is submitted
-  const handleLogin = (e) => {
+  /* ================= CLEAR EXISTING SESSION ================= */
+  // Ensures clean login state when visiting login page
+  React.useEffect(() => {
+    sessionStorage.removeItem("user");
+  }, []);
 
-    // Prevents page refresh on form submit
+  /* ================= HANDLE LOGIN ================= */
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validation: check if email or password is empty
-    if (!email || !password) {
-      toast.error("Please fill all fields"); // error toast
+    // Basic validation
+    if (!username || !password) {
+      toast.error("Please fill all fields");
       return;
     }
 
-    // Success toast showing selected role
-    toast.success(`Login Successful as ${role.toUpperCase()}`);
+    try {
+      // API call to authenticate user
+      const response = await API.post("/auth/login", {
+        username: username,
+        password: password,
+      });
 
-    // Redirecting user based on role
-    // Example: /student/dashboard, /teacher/dashboard, /admin/dashboard
-    navigate(`/${role}/dashboard`);
+      const userData = response.data;
+
+      // Persist authenticated user in session storage
+      sessionStorage.setItem("user", JSON.stringify(userData));
+
+      // Determine redirection based on backend-provided roles
+      const userRoles = userData.roles || [];
+      let targetDashboard = "/student/dashboard"; // Default role
+
+      if (userRoles.includes("ROLE_ADMIN")) {
+        targetDashboard = "/admin/dashboard";
+      } else if (userRoles.includes("ROLE_TEACHER")) {
+        targetDashboard = "/teacher/dashboard";
+      }
+
+      toast.success("Login Successful!");
+
+      // Redirect after short delay
+      setTimeout(() => {
+        navigate(targetDashboard);
+      }, 1000);
+
+    } catch (error) {
+      console.error("Login Error", error);
+
+      // Show backend error message if available
+      toast.error(
+        error.response?.data?.message ||
+        error.response?.data ||
+        "Login Failed! Check credentials."
+      );
+    }
   };
 
   return (
     <>
-      {/* Toast container for showing notifications */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
-      
-      {/* Full screen container */}
+
+      {/* ================= MAIN LAYOUT ================= */}
       <div className="d-flex vh-100">
-
-        {/* ================= LEFT SIDE (Brand Section) ================= */}
+        {/* ================= LEFT SIDE (BRANDING) ================= */}
         <div className="d-flex flex-column justify-content-center align-items-center bg-white col-md-5 p-5">
-          
-          {/* Institute Logo */}
-          <img src={Logo} alt="Logo" width={120} className="mb-4" />
-
-          {/* Institute Title */}
-          <h2 
-            className="fw-bold text-center" 
+          <img
+            src={Logo}
+            alt="Logo"
+            width={120}
+            className="mb-4"
+          />
+          <h2
+            className="fw-bold text-center"
             style={{ color: "#1f2b70" }}
           >
-            INSTITUTE<br/>MANAGEMENT SYSTEM
+            {t("institute_management_system")}
           </h2>
         </div>
 
-        {/* ================= RIGHT SIDE (Login Form) ================= */}
-        <div 
-          className="d-flex flex-column justify-content-center px-5 col-md-7" 
+        {/* ================= RIGHT SIDE (LOGIN FORM) ================= */}
+        <div
+          className="d-flex flex-column justify-content-center px-5 col-md-7"
           style={{ backgroundColor: "#1f2b70", color: "white" }}
         >
+          {/* Language Switcher */}
+          <div className="ms-auto mb-3">
+            <LanguageSwitcher />
+          </div>
+
           <div className="mx-auto w-100" style={{ maxWidth: "450px" }}>
-            
-            {/* Heading */}
-            <h3 className="fw-bold mb-4">Login to your account</h3>
-            
-            {/* Login Form */}
+            <h3 className="fw-bold mb-4">
+              {t("login_title")}
+            </h3>
+
+            {/* ================= LOGIN FORM ================= */}
             <form onSubmit={handleLogin}>
-              
-              {/* ===== ROLE SELECTION ===== */}
+
+              {/* Username / Email */}
               <div className="mb-3">
-                <label className="fw-bold mb-1">Select Role</label>
-
-                {/* Dropdown to select role */}
-                <select 
-                  className="form-select border-0 py-2" 
-                  value={role} 
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              {/* ===== EMAIL INPUT ===== */}
-              <div className="mb-3">
-                <label className="fw-bold mb-1">Email</label>
-
-                {/* Controlled input: value comes from state */}
-                <input 
-                  className="form-control border-0 py-2" 
-                  type="email" 
-                  placeholder="Enter Email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
+                <label className="fw-bold mb-1">
+                  {t("username_email")}
+                </label>
+                <input
+                  className="form-control border-0 py-2"
+                  type="text"
+                  placeholder={t("username_placeholder")}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
 
-              {/* ===== PASSWORD INPUT ===== */}
+              {/* Password */}
               <div className="mb-2">
-                <label className="fw-bold mb-1">Password</label>
-
-                {/* Controlled password input */}
-                <input 
-                  className="form-control border-0 py-2" 
-                  type="password" 
-                  placeholder="Enter Password" 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)} 
+                <label className="fw-bold mb-1">
+                  Password
+                </label>
+                <input
+                  className="form-control border-0 py-2"
+                  type="password"
+                  placeholder={t("password_placeholder")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
-              {/* ===== FORGET PASSWORD LINK ===== */}
+              {/* Forget Password Link */}
               <div className="text-end mb-4">
-                <span 
-                  className="small text-light text-decoration-underline" 
+                <span
+                  className="small text-light text-decoration-underline"
                   style={{ cursor: "pointer", opacity: 0.8 }}
                   onClick={() => navigate("/forget-password")}
                 >
-                  Forget Password?
+                  {t("forget_password")}
                 </span>
               </div>
 
-              {/* ===== LOGIN BUTTON ===== */}
-              <button 
-                className="btn btn-primary w-100 py-2 fw-bold mb-3 shadow-sm" 
-                style={{backgroundColor: "#2563eb", border: "none"}}
+              {/* Login Button */}
+              <button
+                className="btn btn-primary w-100 py-2 fw-bold mb-3 shadow-sm"
+                style={{ backgroundColor: "#2563eb", border: "none" }}
               >
-                LOG IN
+                {t("login_button")}
               </button>
-
             </form>
           </div>
         </div>

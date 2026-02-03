@@ -1,127 +1,145 @@
-// Import React and useState hook for managing state
+// React hook for state management
 import React, { useState } from "react";
 
-// useNavigate helps in programmatic navigation (redirects)
+// React Router hook for navigation
 import { useNavigate } from "react-router-dom";
 
-// Toast components for showing success/error notifications
+// Toast notifications for success/error messages
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Icon for back arrow
+// Icons
 import { FaArrowLeft } from "react-icons/fa";
 
-// Import institute logo
-import Logo from "../assets/Logo.png"; 
+// Logo asset
+import Logo from "../assets/Logo.png";
 
-// ForgetPassword functional component
+// Axios API instance
+import API from "../api";
+
+// i18n hook for multilingual support
+import { useTranslation } from "react-i18next";
+
 const ForgetPassword = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // navigate is used to move between routes
+  // Navigation handler
   const navigate = useNavigate();
 
-  // email state stores the user's entered email
+  // Email input state
   const [email, setEmail] = useState("");
 
-  // Function executed when form is submitted
-  const handleSubmit = (e) => {
+  // Loader flag to disable button while request is in progress
+  const [loading, setLoading] = useState(false);
 
-    // Prevent page reload on form submit
+  /* ================= HANDLE FORM SUBMISSION ================= */
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation: email should not be empty
+    // Basic validation
     if (!email) {
-      toast.error("Please enter your email address.");
+      toast.error(t("please_enter_email"));
       return;
     }
 
-    // BACKEND CONNECTION (future implementation)
-    // axios.post("/api/auth/reset-password", { email })
+    try {
+      setLoading(true);
 
-    // Success message shown to user
-    toast.success("Reset link sent to your email!");
+      // API call to request password reset link
+      await API.post("/auth/forgot-password", { email });
 
-    // Redirect user back to login after 2 seconds
-    setTimeout(() => navigate("/login"), 2000);
+      toast.success(t("reset_link_sent"));
+
+      // Redirect to login page after success
+      setTimeout(() => navigate("/login"), 3000);
+    } catch (error) {
+      console.error(error);
+
+      // Show backend error message if available
+      toast.error(error.response?.data || t("failed_send_link"));
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      {/* Toast container to display notifications */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Full height container */}
+      {/* ================= MAIN LAYOUT ================= */}
       <div className="d-flex vh-100">
-
-        {/* ================= LEFT SIDE (Brand Section) ================= */}
+        {/* ================= LEFT SECTION (LOGO & TITLE) ================= */}
         <div className="d-flex flex-column justify-content-center align-items-center bg-white col-md-5 p-5">
-          
-          {/* Institute Logo */}
-          <img src={Logo} alt="Logo" width={120} className="mb-4" />
+          <img
+            src={Logo}
+            alt="Logo"
+            width={120}
+            className="mb-4"
+          />
 
-          {/* Institute Name */}
-          <h2 
-            className="fw-bold text-center" 
+          <h2
+            className="fw-bold text-center"
             style={{ color: "#1f2b70" }}
           >
-            INSTITUTE<br/>MANAGEMENT SYSTEM
+            {t("institute_management_system")}
           </h2>
         </div>
 
-        {/* ================= RIGHT SIDE (Forget Password Form) ================= */}
-        <div 
-          className="d-flex flex-column justify-content-center px-5 col-md-7" 
+        {/* ================= RIGHT SECTION (FORM) ================= */}
+        <div
+          className="d-flex flex-column justify-content-center px-5 col-md-7"
           style={{ backgroundColor: "#1f2b70", color: "white" }}
         >
           <div className="mx-auto w-100" style={{ maxWidth: "450px" }}>
+            {/* Title */}
+            <h3 className="fw-bold mb-2">
+              {t("forget_password_title")}
+            </h3>
 
-            {/* Page Heading */}
-            <h3 className="fw-bold mb-2">Forget Password</h3>
-
-            {/* Instruction text */}
+            {/* Description */}
             <p className="text-white-50 mb-4 small">
-              Enter your registered email and we'll send you a link to reset your password.
+              {t("forget_password_desc")}
             </p>
 
-            {/* Forget Password Form */}
+            {/* ================= FORGOT PASSWORD FORM ================= */}
             <form onSubmit={handleSubmit}>
-
-              {/* ===== EMAIL INPUT ===== */}
+              {/* Email Input */}
               <div className="mb-4">
-                <label className="fw-bold mb-1">Email Address</label>
-
-                {/* Controlled input field */}
+                <label className="fw-bold mb-1">
+                  {t("email_address")}
+                </label>
                 <input
                   type="email"
                   className="form-control border-0 py-2"
-                  placeholder="Enter registered email"
+                  placeholder={t("enter_registered_email")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              {/* ===== SUBMIT BUTTON ===== */}
+              {/* Submit Button */}
               <button
                 type="submit"
+                disabled={loading}
                 className="btn btn-primary w-100 py-2 fw-bold mb-4 shadow-sm"
                 style={{ backgroundColor: "#2563eb", border: "none" }}
               >
-                SEND RESET LINK
+                {loading ? t("sending") : t("send_reset_link")}
               </button>
 
-              {/* ===== BACK TO LOGIN LINK ===== */}
+              {/* Back to Login */}
               <div className="text-center">
-                <span 
-                  className="text-white text-decoration-none small" 
+                <span
+                  className="text-white text-decoration-none small"
                   style={{ cursor: "pointer" }}
                   onClick={() => navigate("/login")}
                 >
-                  {/* Back arrow icon */}
-                  <FaArrowLeft className="me-2" /> Back to Login
+                  <FaArrowLeft className="me-2" />
+                  {t("back_to_login")}
                 </span>
               </div>
-
             </form>
           </div>
         </div>

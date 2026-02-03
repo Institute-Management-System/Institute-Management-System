@@ -1,190 +1,201 @@
-// Import React hooks
+// React hooks for state, lifecycle, and DOM references
 import React, { useState, useEffect, useRef } from "react";
 
-// Toast notifications for user feedback
+// i18n hook for multilingual support
+import { useTranslation } from "react-i18next";
+
+// Toast notifications for success/error feedback
 import { ToastContainer, toast } from "react-toastify";
+
+// Icons for profile avatar and upload action
+import { FaCamera, FaUser } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
-// Icons for profile and camera
-import { FaCamera, FaUser } from "react-icons/fa";
+// Student profile API services
+import {
+  fetchStudentProfile,      // Fetches logged-in student profile
+  updateStudentProfile,     // Updates student profile data
+} from "../../services/student.service";
 
-// StudentProfile component
 const StudentProfile = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // Main form state holding student profile details
+  /* ================= STATE ================= */
+
+  // Student profile form data
   const [formData, setFormData] = useState({
+    rollNumber: "",
     fullName: "",
-    className: "",
+    qualification: "",
     email: "",
-    mobile: "",
-    password: "",
-    isActive: true,
+    phone: "",
+    status: false,
+    profileImage: "",
   });
 
-  // Backup state to restore data if user clicks Cancel
-  const [backupData, setBackupData] = useState(null);
+  // Selected image file for upload
+  const [imageFile, setImageFile] = useState(null);
 
-  // Stores preview URL of selected profile image
-  const [profileImage, setProfileImage] = useState(null);
-
-  // Reference to hidden file input (used to trigger click programmatically)
+  // Reference to hidden file input
   const fileInputRef = useRef(null);
 
-  // Runs once when component loads (fetch initial profile data)
+  /* ================= LOAD PROFILE ON MOUNT ================= */
   useEffect(() => {
+    loadProfile();
+  }, []);
 
-    // Simulated backend response
-    const fetchedFromDb = {
-      fullName: "Prathmesh",
-      className: "Class 10 - A",
-      email: "prathmesh@gmail.com",
-      mobile: "9876543210",
-      password: "password123",
-      isActive: true,
-    };
+  /* ================= FETCH STUDENT PROFILE ================= */
+  const loadProfile = async () => {
+    try {
+      const data = await fetchStudentProfile();
 
-    // Set fetched data into form
-    setFormData(fetchedFromDb);
+      // Populate form with fetched profile data
+      if (data) {
+        setFormData({
+          rollNumber: data.rollNumber || "",
+          fullName: data.fullName || "",
+          qualification: data.qualification || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          status: data.status || false,
+          profileImage: data.profileImage || "",
+        });
+      }
+    } catch (error) {
+      toast.error(t("failed_load_profile"));
+    }
+  };
 
-    // Save a backup copy for cancel functionality
-    setBackupData(fetchedFromDb);
+  /* ================= INPUT HANDLERS ================= */
 
-  }, []); // Empty dependency → runs only once
-
-  // Handles input field changes (controlled inputs)
+  // Handles text input changes
   const handleChange = (e) => {
     setFormData({
-      ...formData,                 // keep old values
-      [e.target.name]: e.target.value // update changed field
+      ...formData,
+      [e.target.name]: e.target.value,
     });
   };
 
   // Handles profile image selection
   const handleFileChange = (e) => {
-
-    // Ensure a file is selected
-    if (e.target.files && e.target.files[0]) {
-
-      const file = e.target.files[0];
-
-      // Create preview URL for selected image
-      setProfileImage(URL.createObjectURL(file));
-
-      toast.success("Photo selected");
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      toast.success(t("photo_selected"));
     }
   };
 
-  // Handles profile update
-  const handleUpdate = () => {
-
-    // Basic validation
-    if (!formData.fullName || !formData.email) {
-      toast.error("Name and Email are required!");
+  /* ================= UPDATE PROFILE ================= */
+  const handleUpdate = async () => {
+    // Validation: Full name is required
+    if (!formData.fullName.trim()) {
+      toast.error(t("full_name_required"));
       return;
     }
 
-    // Save updated data as backup
-    setBackupData(formData);
+    try {
+      // Prepare multipart form data
+      const payload = new FormData();
+      payload.append("fullName", formData.fullName);
+      payload.append("phone", formData.phone);
 
-    // Backend call would go here
-    // axios.put("/api/student/profile", formData)
+      // Attach profile image only if selected
+      if (imageFile) {
+        payload.append("profileImage", imageFile);
+      }
 
-    toast.success("Profile Updated Successfully!");
-  };
+      // API call to update profile
+      await updateStudentProfile(payload);
 
-  // Handles cancel action (revert changes)
-  const handleCancel = () => {
+      toast.success(t("profile_updated_success"));
 
-    if (backupData) {
-
-      // Restore previous saved data
-      setFormData(backupData);
-
-      // Remove selected image preview
-      setProfileImage(null);
-
-      toast.info("Changes discarded");
+      // Reset image state and reload profile
+      setImageFile(null);
+      loadProfile();
+    } catch (error) {
+      toast.error(t("profile_update_failed"));
     }
   };
 
+  /* ================= UI ================= */
   return (
     <>
-      {/* Toast container */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="d-flex justify-content-center">
-        <div className="card card-custom p-5 w-100" style={{ maxWidth: "850px" }}>
-          
-          {/* ================= PROFILE HEADER ================= */}
+        <div className="card p-5 w-100" style={{ maxWidth: "850px" }}>
+          {/* ===== PROFILE HEADER ===== */}
           <div className="text-center border-bottom pb-4 mb-4">
-
-            {/* Profile Image Container */}
+            {/* Profile Image / Avatar */}
             <div
               className="mx-auto mb-3 d-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm"
-              style={{
-                width: "110px",
-                height: "110px",
-                overflow: "hidden",
-                border: "4px solid #fff",
-                cursor: "pointer",
-              }}
-              onClick={() => fileInputRef.current.click()} // trigger file input
+              style={{ width: 110, height: 110, cursor: "pointer" }}
+              onClick={() => fileInputRef.current.click()}
             >
-              {profileImage ? (
-                // Show selected image preview
-                <img 
-                  src={profileImage} 
-                  alt="Profile" 
-                  className="w-100 h-100 object-fit-cover" 
+              {/* Preview selected image */}
+              {imageFile ? (
+                <img
+                  src={URL.createObjectURL(imageFile)}
+                  alt="Profile"
+                  className="w-100 h-100 rounded-circle"
                 />
+
+              /* Existing profile image */
+              ) : formData.profileImage ? (
+                <img
+                  src={`http://localhost:8080/api${formData.profileImage}`}
+                  alt="Profile"
+                  className="w-100 h-100 rounded-circle"
+                />
+
+              /* Default avatar */
               ) : (
-                // Default user icon
-                <FaUser size={40} className="text-secondary" />
+                <FaUser size={42} className="text-secondary" />
               )}
             </div>
 
-            {/* Upload / Change Photo Text */}
+            {/* Upload Trigger */}
             <div
-              className="mb-3 text-primary small fw-bold"
+              className="text-primary small fw-bold mb-2"
               style={{ cursor: "pointer" }}
               onClick={() => fileInputRef.current.click()}
             >
-              <FaCamera className="me-1" /> 
-              {profileImage ? "Change Photo" : "Upload Photo"}
+              <FaCamera className="me-1" />
+              {t("upload_photo")}
             </div>
-            
+
             {/* Hidden file input */}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              hidden 
-              onChange={handleFileChange} 
+            <input
+              type="file"
+              hidden
+              ref={fileInputRef}
+              accept="image/*"
+              onChange={handleFileChange}
             />
 
-            {/* Student Name */}
-            <h4 className="fw-bold text-dark mb-1">
-              {formData.fullName || "Student"}
+            {/* Student Name & Roll */}
+            <h4 className="fw-bold">
+              {formData.fullName || t("student")}
             </h4>
-
-            {/* Student ID (static for now) */}
-            <p className="text-muted">ID: 7073</p>
+            <p className="text-muted">
+              {t("roll_number")}: {formData.rollNumber || "N/A"}
+            </p>
           </div>
 
-          {/* ================= FORM TITLE ================= */}
-          <h5 className="text-center text-muted mb-4 small fw-bold text-uppercase">
-            Student Information
-          </h5>
+          {/* ===== PROFILE FORM ===== */}
+          <h6 className="text-center text-muted fw-bold mb-4">
+            {t("student_information")}
+          </h6>
 
-          {/* ================= FORM FIELDS ================= */}
           <div className="row g-4">
-
             {/* Full Name */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Full Name :
+              <label className="form-label fw-bold small">
+                {t("full_name")}
               </label>
               <input
-                type="text"
                 className="form-control"
                 name="fullName"
                 value={formData.fullName}
@@ -192,101 +203,73 @@ const StudentProfile = () => {
               />
             </div>
 
-            {/* Class */}
+            {/* Qualification (read-only) */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Class :
+              <label className="form-label fw-bold small">
+                {t("qualification")}
               </label>
               <input
-                type="text"
                 className="form-control"
-                name="className"
-                value={formData.className}
-                onChange={handleChange}
+                value={formData.qualification}
+                disabled
               />
             </div>
 
-            {/* Email */}
+            {/* Email (read-only) */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Email :
+              <label className="form-label fw-bold small">
+                {t("email_address")}
               </label>
               <input
-                type="email"
                 className="form-control"
-                name="email"
                 value={formData.email}
-                onChange={handleChange}
+                disabled
               />
             </div>
 
-            {/* Mobile */}
+            {/* Phone Number */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Mobile No :
+              <label className="form-label fw-bold small">
+                {t("mobile")}
               </label>
               <input
-                type="text"
                 className="form-control"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Password */}
-            <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Password :
-              </label>
-              <input
-                type="password"
-                className="form-control"
-                name="password"
-                value={formData.password}
+                name="phone"
+                value={formData.phone}
                 onChange={handleChange}
               />
             </div>
 
             {/* Account Status */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">
-                Status :
+              <label className="form-label fw-bold small">
+                {t("status")}
               </label>
               <div>
                 <span
-                  className={`badge rounded-pill ${
-                    formData.isActive ? "bg-success" : "bg-danger"
+                  className={`badge ${
+                    formData.status
+                      ? "bg-success"
+                      : "bg-danger"
                   } px-3 py-2`}
-                  style={{ userSelect: "none", opacity: 0.8 }}
                 >
-                  {formData.isActive ? "Active" : "Inactive"}
+                  {formData.status
+                    ? t("active")
+                    : t("inactive")}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ================= ACTION BUTTONS ================= */}
+          {/* ===== ACTIONS ===== */}
           <div className="d-flex justify-content-center gap-3 mt-5">
-
-            {/* Update Button */}
             <button
-              className="btn text-white px-5 fw-bold shadow-sm"
-              style={{ backgroundColor: "#1f2b70", border: "none" }}
+              className="btn btn-primary px-5 fw-bold"
               onClick={handleUpdate}
             >
-              Update
-            </button>
-
-            {/* Cancel Button */}
-            <button
-              className="btn btn-danger px-5 fw-bold shadow-sm"
-              onClick={handleCancel}
-            >
-              Cancel
+              {t("update_profile")}
             </button>
           </div>
-
         </div>
       </div>
     </>

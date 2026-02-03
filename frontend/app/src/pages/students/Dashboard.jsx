@@ -1,133 +1,178 @@
-// Import React and required hooks
-import React, { useState, useEffect } from 'react';
+// React hooks for state management and lifecycle handling
+import React, { useState, useEffect } from "react";
 
-// Import icons used in dashboard cards and notices
-import { 
-  FaUserFriends, 
-  FaBookOpen, 
-  FaClock, 
-  FaInfoCircle, 
-  FaCalendarAlt 
-} from 'react-icons/fa';
+// Icons used for dashboard statistics and notices
+import {
+  FaUserFriends,
+  FaBookOpen,
+  FaClock,
+  FaInfoCircle,
+  FaBell,
+} from "react-icons/fa";
 
-// StudentDashboard component
+// Student-related API service calls
+import {
+  fetchTotalCourses,        // Fetches total enrolled courses count
+  fetchTotalSubjects,       // Fetches total subjects count
+  fetchOverallAttendance,   // Fetches overall attendance percentage
+  fetchTopNotices,          // Fetches latest/top notices
+  fetchStudentCourses,      // Fetches student enrolled courses
+} from "../../services/student.service";
+
+// i18n translation hook
+import { useTranslation } from "react-i18next";
+
 const StudentDashboard = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // stats: stores dashboard summary cards (courses, subjects, attendance)
+  // Dashboard statistics (cards)
   const [stats, setStats] = useState([]);
 
-  // notices: stores notice board items
+  // Latest notices list
   const [notices, setNotices] = useState([]);
 
-  // useEffect runs once when component loads (componentDidMount equivalent)
+  // Loader flag
+  const [loading, setLoading] = useState(false);
+
+  /* ================= LOAD DASHBOARD ON COMPONENT MOUNT ================= */
   useEffect(() => {
+    loadDashboard();
+  }, []);
 
-    // Dummy data simulating backend response for statistics
-    const backendStats = [
-      { title: "COURSES", value: "5", desc: "Enrolled courses" },
-      { title: "SUBJECTS", value: "12", desc: "Total subjects" },
-      { title: "ATTENDANCE", value: "85%", desc: "Average attendance" }
-    ];
+  /* ================= DASHBOARD DATA LOADER ================= */
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
 
-    // Dummy data simulating backend response for notices
-    const backendNotices = [
-      { id: 1, title: "Semester Exams", date: "2025-10-24", desc: "Final semester exams schedule has been released." },
-      { id: 2, title: "Diwali Holiday", date: "2025-11-01", desc: "College remains closed for 3 days." },
-      { id: 3, title: "Project Submission", date: "2025-11-05", desc: "Final year project submission deadline." },
-      { id: 4, title: "Guest Lecture", date: "2025-12-10", desc: "Guest lecture on AI by Dr. Smith." }
-    ];
+      // Fetch student courses to determine active course
+      const myCourses = await fetchStudentCourses();
+      const activeCourseId =
+        myCourses.length > 0 ? myCourses[0].courseId : null;
 
-    // Setting data into state (triggers re-render)
-    setStats(backendStats);
-    setNotices(backendNotices);
+      // Fetch course and subject statistics
+      const coursesCount = await fetchTotalCourses();
+      const subjectsCount = await fetchTotalSubjects();
 
-  }, []); // Empty dependency array → runs only once
+      // Fetch attendance only if course exists
+      let attendance = null;
+      if (activeCourseId) {
+        attendance = await fetchOverallAttendance({
+          courseId: activeCourseId,
+        });
+      }
 
-  // Returns icon and styling based on stat title
-  const getStatStyle = (title) => {
-    switch (title) {
-      case "COURSES":
-        return { 
-          icon: <FaUserFriends />, 
-          bg: "#e0f2fe", 
-          color: "#0284c7" 
-        };
-      case "SUBJECTS":
-        return { 
-          icon: <FaBookOpen />, 
-          bg: "#dcfce7", 
-          color: "#16a34a" 
-        };
-      case "ATTENDANCE":
-        return { 
-          icon: <FaClock />, 
-          bg: "#ffedd5", 
-          color: "#ea580c" 
-        };
-      default:
-        return { 
-          icon: <FaInfoCircle />, 
-          bg: "#f3f4f6", 
-          color: "#4b5563" 
-        };
+      // Fetch top/latest notices
+      const topNotices = await fetchTopNotices();
+
+      // Prepare statistics cards data
+      setStats([
+        {
+          title: "courses_enrolled",
+          value: coursesCount,
+          desc: "Enrolled courses",
+        },
+        {
+          title: "total_subjects",
+          value: subjectsCount,
+          desc: "Total subjects",
+        },
+        {
+          title: "overall_attendance",
+          value: `${attendance?.attendancePercentage?.toFixed(1) ?? 0}%`,
+          desc: "Overall attendance",
+        },
+      ]);
+
+      // Set notices list
+      setNotices(topNotices);
+    } catch (err) {
+      console.error("Dashboard load failed", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  /* ================= STAT CARD STYLING HELPER ================= */
+  const getStatStyle = (title) => {
+    // Style based on stat type
+    if (title === "courses_enrolled")
+      return {
+        icon: <FaUserFriends />,
+        bg: "#e0f2fe",
+        color: "#0284c7",
+      };
+
+    if (title === "total_subjects")
+      return {
+        icon: <FaBookOpen />,
+        bg: "#dcfce7",
+        color: "#16a34a",
+      };
+
+    if (title === "overall_attendance")
+      return {
+        icon: <FaClock />,
+        bg: "#ffedd5",
+        color: "#ea580c",
+      };
+
+    // Default style
+    return {
+      icon: <FaInfoCircle />,
+      bg: "#f3f4f6",
+      color: "#4b5563",
+    };
   };
 
   return (
     <div className="container-fluid p-0">
-
-      {/* Page Header */}
+      {/* ================= DASHBOARD HEADER ================= */}
       <div className="mb-4">
-        <h4 className="fw-bold" style={{ color: '#1e293b' }}>
-          Student Dashboard
-        </h4>
+        <h4 className="fw-bold text-dark">{t("dashboard")}</h4>
         <p className="text-muted small">
-          Welcome back, here is your daily overview.
+          {t("welcome_back")}
         </p>
       </div>
 
-      {/* Main Grid */}
       <div className="row g-4">
-        
-        {/* ================= LEFT SIDE (Stats Cards) ================= */}
+        {/* ================= LEFT SECTION : STATS CARDS ================= */}
         <div className="col-lg-5 d-flex flex-column gap-3">
+          {stats.map((stat) => {
+            const style = getStatStyle(stat.title);
 
-          {/* Loop through stats */}
-          {stats.map((stat, index) => {
-
-            // Get style for current stat
-            const style = getStatStyle(stat.title); 
-            
             return (
-              <div 
-                key={index} 
-                className="card border-0 shadow-sm p-4" 
-                style={{ borderRadius: '12px' }}
+              <div
+                key={stat.title}
+                className="card border-0 shadow-sm p-4"
+                style={{ borderRadius: "12px" }}
               >
                 <div className="d-flex justify-content-between align-items-center">
-
-                  {/* Stat text */}
+                  {/* Stat Info */}
                   <div>
                     <h6 className="text-muted fw-bold text-uppercase small mb-2">
-                      {stat.title}
+                      {t(stat.title)}
                     </h6>
+
+                    {/* Show loader while fetching */}
                     <h2 className="fw-bold mb-1 text-dark">
-                      {stat.value}
+                      {loading ? "..." : stat.value}
                     </h2>
+
                     <small className="text-secondary">
                       {stat.desc}
                     </small>
                   </div>
 
-                  {/* Stat icon */}
-                  <div 
-                    className="d-flex align-items-center justify-content-center rounded-circle" 
-                    style={{ 
-                      width: '60px', 
-                      height: '60px', 
-                      backgroundColor: style.bg, 
+                  {/* Stat Icon */}
+                  <div
+                    className="d-flex align-items-center justify-content-center rounded-circle"
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      backgroundColor: style.bg,
                       color: style.color,
-                      fontSize: '1.5rem'
+                      fontSize: "1.5rem",
                     }}
                   >
                     {style.icon}
@@ -138,86 +183,48 @@ const StudentDashboard = () => {
           })}
         </div>
 
-        {/* ================= RIGHT SIDE (Notice Board) ================= */}
+        {/* ================= RIGHT SECTION : TOP 5 NOTICES ================= */}
         <div className="col-lg-7">
-          <div 
-            className="card border-0 shadow-sm h-100 p-4" 
-            style={{ borderRadius: '12px' }}
-          >
+          <div className="card border-0 shadow-sm h-100 p-4">
+            <h6 className="fw-bold mb-3 d-flex align-items-center gap-2">
+              <FaBell className="text-warning" />
+              {t("latest_notices")}
+            </h6>
 
-            {/* Notice Board Header */}
-            <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-              <h5 
-                className="fw-bold mb-0 d-flex align-items-center gap-2" 
-                style={{ color: '#1e293b' }}
-              >
-                <FaInfoCircle className="text-primary" /> Notice Board
-              </h5>
-              <span className="badge bg-light text-dark border">
-                Latest Updates
-              </span>
-            </div>
-            
-            {/* Notices List */}
-            <div className="d-flex flex-column gap-3">
-
-              {/* Loop through notices */}
-              {notices.map((notice, i) => {
-
-                // Convert date string to Date object
-                const dateObj = new Date(notice.date);
-
-                // Extract day and month
-                const day = dateObj.getDate();
-                const month = dateObj.toLocaleString('default', { month: 'short' });
-
-                return (
-                  <div key={i} className="d-flex gap-3">
-
-                    {/* Date Box */}
-                    <div 
-                      className="d-flex flex-column align-items-center justify-content-center rounded p-2 text-white shadow-sm"
-                      style={{ 
-                        minWidth: '70px', 
-                        height: '70px', 
-                        backgroundColor: '#1f2b70' 
-                      }}
-                    >
-                      <span className="h4 fw-bold mb-0">{day}</span>
-                      <small 
-                        className="text-uppercase" 
-                        style={{ fontSize: '10px' }}
-                      >
-                        {month}
-                      </small>
+            {/* No Notices State */}
+            {notices.length === 0 ? (
+              <p className="text-muted text-center mb-0">
+                {t("no_notices")}
+              </p>
+            ) : (
+              /* Notices List */
+              <div className="d-flex flex-column gap-3">
+                {notices.map((notice) => (
+                  <div
+                    key={notice.id}
+                    className="p-3 rounded bg-light"
+                    style={{ borderLeft: "4px solid #1f2b70" }}
+                  >
+                    <div className="fw-semibold text-dark">
+                      {notice.title}
                     </div>
 
-                    {/* Notice Content */}
-                    <div>
-                      <h6 className="fw-bold text-dark mb-1">
-                        {notice.title}
-                      </h6>
-                      <p className="text-muted small mb-0">
-                        {notice.desc}
-                      </p>
-                      <small className="text-primary" style={{ fontSize: '0.8rem' }}>
-                        <FaCalendarAlt className="me-1"/> {notice.date}
-                      </small>
+                    <div className="text-muted small mb-1">
+                      {notice.publishDate}
+                    </div>
+
+                    <div
+                      className="text-secondary"
+                      style={{ fontSize: "0.9rem" }}
+                    >
+                      {notice.description}
                     </div>
                   </div>
-                );
-              })}
-
-              {/* Empty State */}
-              {notices.length === 0 && (
-                <p className="text-muted text-center">
-                  No notices found.
-                </p>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
       </div>
     </div>
   );
