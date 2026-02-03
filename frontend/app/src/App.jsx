@@ -11,13 +11,15 @@ import ForgetPassword from "./pages/ForgetPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Register from "./pages/Register";
 
-// Route Guards
+// Route Protection
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // ================= ADMIN =================
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminAddUser from "./pages/admin/AdminAddUser";
+
+// Students
 import AdminStudentDashboard from "./pages/admin/AdminStudentDashboard";
 import AdminAddStudent from "./pages/admin/AdminAddStudent";
 import AdminStudentList from "./pages/admin/AdminStudentList";
@@ -25,18 +27,24 @@ import AdminStudentAttendance from "./pages/admin/AdminStudentAttendance";
 import AdminStudentMarks from "./pages/admin/AdminStudentMarks";
 import AdminViewStudentMarks from "./pages/admin/AdminViewStudentMarks";
 import AdminStudentFees from "./pages/admin/AdminStudentFees";
+import AdminStudentFeedback from "./pages/admin/AdminStudentFeedback";
+import AdminFeedbackResponse from "./pages/admin/AdminFeedbackResponse";
+
+// Teachers
 import AdminTeacherDashboard from "./pages/admin/AdminTeacherDashboard";
 import AdminAddTeacher from "./pages/admin/AdminAddTeacher";
 import AdminTeachersList from "./pages/admin/AdminTeachersList";
 import AdminTeacherAttendance from "./pages/admin/AdminTeacherAttendance";
+
+// Courses & Subjects
 import AdminCourseList from "./pages/admin/AdminCourseList";
 import AdminAddCourse from "./pages/admin/AdminAddCourse";
 import AdminCourseViewMarks from "./pages/admin/AdminCourseViewMarks";
 import AdminSubjectList from "./pages/admin/AdminSubjectList";
 import AdminManageSubjects from "./pages/admin/AdminManageSubjects";
+
+// Management
 import AdminManageNotices from "./pages/admin/AdminManageNotices";
-import AdminStudentFeedback from "./pages/admin/AdminStudentFeedback";
-import AdminFeedbackResponse from "./pages/admin/AdminFeedbackResponse";
 
 // ================= STUDENT =================
 import StudentDashboard from "./pages/students/Dashboard";
@@ -66,44 +74,56 @@ const App = () => {
   return (
     <>
       <Routes>
-
-        {/* PUBLIC */}
+        {/* ===== PUBLIC ===== */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forget-password" element={<ForgetPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
 
-        {/* ADMIN */}
+        {/* ===== ADMIN ===== */}
         <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]} />}>
           <Route path="/admin" element={<MainLayout role="admin" />}>
             <Route index element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="add-user" element={<AdminAddUser />} />
+
+            {/* Students */}
             <Route path="students" element={<AdminStudentDashboard />} />
             <Route path="students/add" element={<AdminAddStudent />} />
+            <Route path="students/edit/:id" element={<AdminAddStudent />} />
             <Route path="students/list" element={<AdminStudentList />} />
             <Route path="students/attendance" element={<AdminStudentAttendance />} />
             <Route path="students/marks" element={<AdminStudentMarks />} />
             <Route path="students/view-marks" element={<AdminViewStudentMarks />} />
             <Route path="students/fees" element={<AdminStudentFees />} />
+            <Route path="students/feedbacks" element={<AdminStudentFeedback />} />
+            <Route path="students/feedback-response" element={<AdminFeedbackResponse />} />
+
+            {/* Teachers */}
             <Route path="teachers" element={<AdminTeacherDashboard />} />
             <Route path="teachers/add" element={<AdminAddTeacher />} />
+            <Route path="teachers/edit/:id" element={<AdminAddTeacher />} />
             <Route path="teachers/list" element={<AdminTeachersList />} />
             <Route path="teachers/attendance" element={<AdminTeacherAttendance />} />
+
+            {/* Courses & Subjects */}
             <Route path="courses" element={<AdminCourseList />} />
             <Route path="courses/add" element={<AdminAddCourse />} />
+            <Route path="courses/edit/:id" element={<AdminAddCourse />} />
             <Route path="courses/marks" element={<AdminCourseViewMarks />} />
+
             <Route path="subjects" element={<AdminSubjectList />} />
             <Route path="subjects/manage" element={<AdminManageSubjects />} />
+            <Route path="subjects/edit/:id" element={<AdminManageSubjects />} />
+
+            {/* Management */}
             <Route path="notices" element={<AdminManageNotices />} />
-            <Route path="feedbacks" element={<AdminStudentFeedback />} />
-            <Route path="feedback-response" element={<AdminFeedbackResponse />} />
           </Route>
         </Route>
 
-        {/* STUDENT */}
+        {/* ===== STUDENT ===== */}
         <Route element={<ProtectedRoute allowedRoles={["ROLE_STUDENT"]} />}>
           <Route path="/student" element={<MainLayout role="student" />}>
             <Route index element={<Navigate to="dashboard" />} />
@@ -120,7 +140,7 @@ const App = () => {
           </Route>
         </Route>
 
-        {/* TEACHER */}
+        {/* ===== TEACHER ===== */}
         <Route element={<ProtectedRoute allowedRoles={["ROLE_TEACHER"]} />}>
           <Route path="/teacher" element={<MainLayout role="teacher" />}>
             <Route index element={<Navigate to="dashboard" />} />
@@ -136,7 +156,6 @@ const App = () => {
             <Route path="exams" element={<TeacherExams />} />
           </Route>
         </Route>
-
       </Routes>
 
       <ToastContainer position="top-right" autoClose={3000} />

@@ -25,7 +25,7 @@ const AdminStudentDashboard = () => {
     },
     {
       title: t('feedback'),
-      path: "/admin/feedbacks",
+      path: "/admin/students/feedbacks",
       color: "bg-warning"
     },
 

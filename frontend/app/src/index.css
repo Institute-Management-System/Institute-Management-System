@@ -1,9 +1,12 @@
 @import 'react-toastify/dist/ReactToastify.css';
 
 :root {
-  --primary-blue: #1f2b70;    /* Deep Blue (Sidebar/Login Right) */
-  --active-blue: #255dff;     /* Bright Blue (Active Links/Buttons) */
-  --bg-gray: #f5f7fa;         /* Light Gray (Main Background) */
+  --primary-blue: #1f2b70;
+  /* Deep Blue (Sidebar/Login Right) */
+  --active-blue: #255dff;
+  /* Bright Blue (Active Links/Buttons) */
+  --bg-gray: #f5f7fa;
+  /* Light Gray (Main Background) */
   --sidebar-width: 260px;
 }
 
@@ -16,13 +19,61 @@ body {
 }
 
 /* --- LOGIN PAGE --- */
-.login-container { min-height: 100vh; width: 100vw; display: flex; }
-.login-left { flex: 1; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.login-right { flex: 1; background: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; }
-.login-input { background: white !important; border: none; padding: 12px; border-radius: 6px; }
+.login-container {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+}
+
+.login-left {
+  flex: 1;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-right {
+  flex: 1;
+  background: var(--primary-blue);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-input {
+  background: white !important;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+/* --- GLOBAL TABLES --- */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive>.table {
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.table {
+  white-space: nowrap;
+  /* Prevent wrapping in cells to force scrolling if needed */
+}
 
 /* --- GLOBAL LAYOUT & SIDEBAR --- */
-.layout-wrapper { display: flex; min-height: 100vh; }
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
 
 .sidebar {
   width: var(--sidebar-width);
@@ -41,11 +92,40 @@ body {
   padding: 20px;
   background-color: var(--bg-gray);
   min-height: 100vh;
+  transition: margin-left 0.3s;
+}
+
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+    /* Fixed width sidebar on mobile */
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+  }
 }
 
 .sidebar-header {
   padding: 25px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -55,7 +135,8 @@ body {
   color: #c5cae9;
   padding: 12px 20px;
   margin: 5px 15px;
-  border-radius: 50px; /* Rounded Pill Shape */
+  border-radius: 50px;
+  /* Rounded Pill Shape */
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -63,10 +144,38 @@ body {
   transition: 0.3s;
 }
 
-.nav-link:hover { background: rgba(255,255,255,0.1); color: white; }
-.nav-link.active { background: var(--active-blue); color: white; font-weight: 600; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-.nav-icon { margin-right: 15px; font-size: 18px; }
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-link.active {
+  background: var(--active-blue);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.nav-icon {
+  margin-right: 15px;
+  font-size: 18px;
+}
 
 /* --- CARDS & TABLES --- */
-.custom-card { background: white; border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; }
-.page-header { background: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; margin-bottom: 25px; }
+.custom-card {
+  background: white;
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  padding: 25px;
+}
+
+.page-header {
+  background: white;
+  padding: 15px 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}

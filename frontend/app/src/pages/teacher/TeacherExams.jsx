@@ -1,35 +1,18 @@
-// ===================== Teacher Exam Page =====================
-
-// React hooks for state management and lifecycle methods
 import React, { useState, useEffect } from "react";
-
-// Internationalization (i18n) hook
 import { useTranslation } from "react-i18next";
-
-// Icons used in exam management UI
 import { FaPlus, FaGoogle, FaExternalLinkAlt, FaEye } from "react-icons/fa";
-
-// Toast notifications for feedback
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-// Backend services
 import { getTeacherSubjects } from "../../services/teacherService";
 import { createExam, getExamsForTeacher, getExamResults } from "../../services/examService";
-
-// Styled-components for UI styling
 import styled from "styled-components";
 
-// ===================== STYLED COMPONENTS =====================
-
-// Main page container
 const Container = styled.div`
   padding: 2rem;
   background-color: #f8f9fa;
   min-height: 100vh;
 `;
 
-// Header section
 const Header = styled.div`
   display: flex;
   justify-content: space-between;
@@ -37,13 +20,11 @@ const Header = styled.div`
   margin-bottom: 2rem;
 `;
 
-// Page title
 const Title = styled.h2`
   color: #2c3e50;
   font-weight: 700;
 `;
 
-// Button to create a new exam
 const CreateButton = styled.button`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -62,14 +43,12 @@ const CreateButton = styled.button`
   }
 `;
 
-// Grid for displaying exam cards
 const CardGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 `;
 
-// Individual exam card
 const ExamCard = styled.div`
   background: white;
   border-radius: 15px;
@@ -81,7 +60,6 @@ const ExamCard = styled.div`
   }
 `;
 
-// Badge for course, subject, and status
 const Badge = styled.span`
   background-color: ${props => props.bg || "#e9ecef"};
   color: ${props => props.color || "#495057"};
@@ -92,7 +70,6 @@ const Badge = styled.span`
   margin-right: 0.5rem;
 `;
 
-// Action buttons inside exam cards
 const ActionButton = styled.button`
   background: transparent;
   border: 1px solid #dee2e6;
@@ -111,7 +88,6 @@ const ActionButton = styled.button`
   }
 `;
 
-// Modal overlay
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -125,7 +101,6 @@ const ModalOverlay = styled.div`
   z-index: 1000;
 `;
 
-// Modal content
 const ModalContent = styled.div`
   background: white;
   padding: 2rem;
@@ -136,19 +111,16 @@ const ModalContent = styled.div`
   overflow-y: auto;
 `;
 
-// Form group wrapper
 const FormGroup = styled.div`
   margin-bottom: 1rem;
 `;
 
-// Label for form inputs
 const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
 `;
 
-// Input field
 const Input = styled.input`
   width: 100%;
   padding: 0.6rem;
@@ -160,7 +132,6 @@ const Input = styled.input`
   }
 `;
 
-// Select dropdown
 const Select = styled.select`
   width: 100%;
   padding: 0.6rem;
@@ -168,35 +139,17 @@ const Select = styled.select`
   border-radius: 6px;
 `;
 
-// ===================== COMPONENT =====================
-
 const TeacherExams = () => {
-    // Translation function
     const { t } = useTranslation();
-
-    /* ===================== STATE ===================== */
-
-    // Exams created by teacher
     const [exams, setExams] = useState([]);
-
-    // Subjects assigned to teacher
     const [subjects, setSubjects] = useState([]);
-
-    // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
-
-    // Selected exam for results
     const [selectedExam, setSelectedExam] = useState(null);
-
-    // Exam results data
     const [examResults, setExamResults] = useState([]);
-
-    // Loading indicators
     const [loading, setLoading] = useState(false);
     const [resultsLoading, setResultsLoading] = useState(false);
 
-    // Create exam form data
     const [formData, setFormData] = useState({
         examName: "",
         subjectId: "",
@@ -205,23 +158,19 @@ const TeacherExams = () => {
         examLink: "",
     });
 
-    // Logged-in teacher ID
     const teacherId = JSON.parse(sessionStorage.getItem("user"))?.id;
 
-    /* ===================== INITIAL LOAD ===================== */
-
-    // Load subjects and exams on component mount
     useEffect(() => {
         loadData();
     }, []);
 
-    // Fetch teacher subjects and exams
     const loadData = async () => {
         try {
             const [subjectsRes, examsRes] = await Promise.all([
                 getTeacherSubjects(teacherId),
                 getExamsForTeacher(teacherId),
             ]);
+            console.log("Teacher Subjects Response:", subjectsRes.data);
             setSubjects(subjectsRes.data);
             setExams(examsRes.data);
         } catch (error) {
@@ -229,14 +178,10 @@ const TeacherExams = () => {
         }
     };
 
-    /* ===================== HANDLERS ===================== */
-
-    // Open Google Forms creation page
     const handleCreateGoogleForm = () => {
         window.open("https://docs.google.com/forms/u/0/create", "_blank");
     };
 
-    // View exam results
     const handleViewResults = async (exam) => {
         setSelectedExam(exam);
         setIsResultsModalOpen(true);
@@ -245,17 +190,15 @@ const TeacherExams = () => {
             const res = await getExamResults(exam.id);
             setExamResults(res.data);
         } catch (error) {
+            console.error("Error fetching results", error);
             toast.error("Failed to fetch exam results");
         } finally {
             setResultsLoading(false);
         }
     };
 
-    // Create new exam
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Basic form validation
         if (!formData.examName || !formData.subjectId || !formData.examDate || !formData.examLink) {
             toast.warning(t('please_fill_all_fields'));
             return;
@@ -263,18 +206,17 @@ const TeacherExams = () => {
 
         try {
             setLoading(true);
+            const selectedSubject = subjects.find(s => s.subjectId === parseInt(formData.subjectId));
 
-            // Find selected subject details
-            const selectedSubject = subjects.find(
-                s => s.subjectId === parseInt(formData.subjectId)
-            );
-
-            if (!selectedSubject || !selectedSubject.courseId) {
+            if (!selectedSubject) {
                 toast.error(t('invalid_subject'));
                 return;
             }
+            if (!selectedSubject.courseId) {
+                toast.error(t('course_id_missing'));
+                return;
+            }
 
-            // Prepare payload for backend
             const payload = {
                 ...formData,
                 courseId: selectedSubject.courseId,
@@ -283,8 +225,6 @@ const TeacherExams = () => {
             };
 
             await createExam(payload);
-
-            // Reset form and reload exams
             toast.success(t('exam_created_success'));
             setIsModalOpen(false);
             setFormData({
@@ -296,18 +236,16 @@ const TeacherExams = () => {
             });
             loadData();
         } catch (error) {
+            console.error("Create Exam Error:", error);
             toast.error(error.response?.data?.message || t('failed_create_exam'));
         } finally {
             setLoading(false);
         }
     };
 
-    /* ===================== UI ===================== */
     return (
         <Container>
             <ToastContainer />
-
-            {/* Header */}
             <Header>
                 <Title>{t('manage_exams')}</Title>
                 <CreateButton onClick={() => setIsModalOpen(true)}>
@@ -315,7 +253,7 @@ const TeacherExams = () => {
                 </CreateButton>
             </Header>
 
-            {/* Exam list */}
+            {/* EXAM LIST */}
             <CardGrid>
                 {exams.length > 0 ? (
                     exams.map((exam) => (
@@ -330,7 +268,7 @@ const TeacherExams = () => {
                                 {t('total_marks')}: {exam.totalMarks}
                             </p>
                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <ActionButton as="a" href={exam.examLink} target="_blank">
+                                <ActionButton as="a" href={exam.examLink} target="_blank" rel="noopener noreferrer">
                                     <FaExternalLinkAlt /> {t('view_form')}
                                 </ActionButton>
                                 <ActionButton onClick={() => handleViewResults(exam)}>
@@ -340,13 +278,155 @@ const TeacherExams = () => {
                         </ExamCard>
                     ))
                 ) : (
-                    <div style={{ textAlign: 'center', color: '#6c757d' }}>
+                    <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#6c757d', padding: '2rem' }}>
                         {t('no_exams_created')}
                     </div>
                 )}
             </CardGrid>
 
-            {/* Modals remain unchanged */}
+            {/* CREATE EXAM MODAL */}
+            {isModalOpen && (
+                <ModalOverlay onClick={() => setIsModalOpen(false)}>
+                    <ModalContent onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h3>{t('create_new_exam')}</h3>
+                            <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                        </div>
+
+                        <div className="alert alert-info d-flex align-items-center gap-2 mb-3" style={{ background: '#e3f2fd', color: '#0d47a1', padding: '1rem', borderRadius: '8px' }}>
+                            <FaGoogle />
+                            <small>
+                                <a href="#" onClick={handleCreateGoogleForm} style={{ fontWeight: 'bold' }}>{t('create_exam_step1')}</a>
+                                <br />
+                                {t('create_exam_step2')}
+                            </small>
+                        </div>
+
+                        <form onSubmit={handleSubmit}>
+                            <FormGroup>
+                                <Label>{t('exam_title')}</Label>
+                                <Input
+                                    type="text"
+                                    value={formData.examName}
+                                    onChange={(e) => setFormData({ ...formData, examName: e.target.value })}
+                                    required
+                                />
+                            </FormGroup>
+
+                            <FormGroup>
+                                <Label>{t('subject')}</Label>
+                                <Select
+                                    value={formData.subjectId}
+                                    onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
+                                    required
+                                >
+                                    <option value="">{t('select_subject')}</option>
+                                    {subjects.map((sub) => (
+                                        <option key={sub.id} value={sub.subjectId}>
+                                            {sub.subjectName} ({sub.courseName})
+                                        </option>
+                                    ))}
+                                </Select>
+                            </FormGroup>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <FormGroup>
+                                    <Label>{t('exam_date')}</Label>
+                                    <Input
+                                        type="date"
+                                        value={formData.examDate}
+                                        onChange={(e) => setFormData({ ...formData, examDate: e.target.value })}
+                                        required
+                                    />
+                                </FormGroup>
+                                <FormGroup>
+                                    <Label>{t('total_marks')}</Label>
+                                    <Input
+                                        type="number"
+                                        value={formData.totalMarks}
+                                        onChange={(e) => setFormData({ ...formData, totalMarks: e.target.value })}
+                                        required
+                                    />
+                                </FormGroup>
+                            </div>
+
+                            <FormGroup>
+                                <Label>{t('google_form_link')}</Label>
+                                <Input
+                                    type="url"
+                                    placeholder="https://docs.google.com/forms/..."
+                                    value={formData.examLink}
+                                    onChange={(e) => setFormData({ ...formData, examLink: e.target.value })}
+                                    required
+                                />
+                            </FormGroup>
+
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+                                <button type="button" onClick={() => setIsModalOpen(false)} style={{ background: 'white', border: '1px solid #dee2e6', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer' }}>{t('cancel')}</button>
+                                <button type="submit" disabled={loading} style={{ background: '#667eea', color: 'white', border: 'none', padding: '0.5rem 1.5rem', borderRadius: '6px', cursor: 'pointer' }}>
+                                    {loading ? t('saving') : t('save_exam')}
+                                </button>
+                            </div>
+                        </form>
+                    </ModalContent>
+                </ModalOverlay>
+            )}
+
+            {/* RESULTS MODAL */}
+            {isResultsModalOpen && (
+                <ModalOverlay onClick={() => setIsResultsModalOpen(false)}>
+                    <ModalContent onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h3>{t('exam_results')}: {selectedExam?.examName}</h3>
+                            <button onClick={() => setIsResultsModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                        </div>
+
+                        {resultsLoading ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}>{t('loading')}...</div>
+                        ) : (
+                            <table className="table table-hover" style={{ width: '100%' }}>
+                                <thead>
+                                    <tr>
+                                        <th>{t('roll_no')}</th>
+                                        <th>{t('student_name')}</th>
+                                        <th>{t('status')}</th>
+                                        <th>{t('marks')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {examResults.length > 0 ? (
+                                        examResults.map((result) => (
+                                            <tr key={result.studentId}>
+                                                <td>{result.rollNumber || "N/A"}</td>
+                                                <td>{result.studentName}</td>
+                                                <td>
+                                                    <Badge bg={result.status === "Present" ? "#d4edda" : "#e2e3e5"} color={result.status === "Present" ? "#155724" : "#383d41"}>
+                                                        {result.status}
+                                                    </Badge>
+                                                </td>
+                                                <td>
+                                                    {result.obtainedMarks !== null ? (
+                                                        <strong>{result.obtainedMarks} / {selectedExam.totalMarks}</strong>
+                                                    ) : "-"}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" style={{ textAlign: 'center', padding: '1rem', color: '#6c757d' }}>
+                                                {t('no_students_enrolled')}
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
+                            <button type="button" onClick={() => setIsResultsModalOpen(false)} style={{ background: 'white', border: '1px solid #dee2e6', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer' }}>{t('close')}</button>
+                        </div>
+                    </ModalContent>
+                </ModalOverlay>
+            )}
         </Container>
     );
 };

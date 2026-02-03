@@ -22,7 +22,7 @@ const AdminFeedbackResponse = () => {
       }
     } else {
       toast.error("No feedback data found.");
-      navigate("/admin/feedbacks");
+      navigate("/admin/students/feedbacks");
     }
   }, [location, navigate]);
 
@@ -39,7 +39,7 @@ const AdminFeedbackResponse = () => {
 
       // Delay navigation slightly to let the toast show
       setTimeout(() => {
-        navigate("/admin/feedbacks");
+        navigate("/admin/students/feedbacks");
       }, 1500);
 
     } catch (error) {
