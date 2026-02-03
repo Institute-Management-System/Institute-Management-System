@@ -1,104 +1,142 @@
+// ===================== Teacher Subjects Page =====================
+
+// React hooks for managing component state and lifecycle
 import React, { useState, useEffect } from "react";
-// useState  -> to store subjects data in state
-// useEffect -> to load/fetch data when component loads
 
+// Internationalization (i18n) hook for translating UI text
+import { useTranslation } from "react-i18next";
+
+// Application logo used in the page header
 import Logo from "../../assets/Logo.png";
-// Institute logo image
 
-import { ToastContainer } from "react-toastify";
-// ToastContainer -> container to show toast notifications
-
+// Toast notifications for user feedback
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// Toastify default styling
+
+// Backend service to fetch subjects assigned to the teacher
+// Updated to use real service
+import { getTeacherSubjects } from "../../services/teacherService";
+
+// ===================== COMPONENT =====================
 
 const TeacherSubjects = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // subjects -> list of assigned subjects for teacher
+  /* ===================== STATE ===================== */
+
+  // State to store assigned subjects
   const [subjects, setSubjects] = useState([]);
 
-  // useEffect runs only once when component loads (because dependency array is [])
+  // Get logged-in user details from session storage
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const teacherId = user?.id;
+
+  /* ===================== LOAD SUBJECTS ===================== */
+
+  // Fetch assigned subjects when component mounts or teacherId changes
   useEffect(() => {
+    if (!teacherId) return;
 
-    // Dummy subjects data (in real project it will come from backend API)
-    const fetchedData = [
-      { id: 101, course: "PG-DAC", date: "01-02-2025", subject: "Core Java" },
-      { id: 102, course: "PG-DMC", date: "02-03-2025", subject: "Web Technologies" },
-      { id: 103, course: "PG-DBDA", date: "04-05-2025", subject: "Python Programming" },
-      { id: 104, course: "PG-DAC", date: "06-07-2025", subject: "Advance Java" },
-      { id: 105, course: "PG-DESD", date: "10-08-2025", subject: "Operating Systems" },
-    ];
+    getTeacherSubjects(teacherId)
+      .then(res => {
+        // Map backend DTO (MySubjectDTO) to UI-friendly format
+        // Backend DTO: { id, courseName, startDate, subjectName, schedulePath }
+        // UI expects:  { id, course, date, subject, schedulePath }
+        const mapped = res.data.map(item => ({
+          id: item.id,
+          course: item.courseName,
+          date: item.startDate,
+          subject: item.subjectName,
+          schedulePath: item.schedulePath
+        }));
 
-    // store fetched subjects in state
-    setSubjects(fetchedData);
-  }, []); // empty array -> run once only
+        // Store mapped subjects in state
+        setSubjects(mapped);
+      })
+      .catch(err => {
+        console.error(err);
+        // Show error message if subjects fail to load
+        toast.error(t('failed_load_subjects'));
+      });
+  }, [teacherId]);
 
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Toast container to show toast messages */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Page header section */}
+      {/* Page Header */}
       <div className="page-header mb-4 d-flex align-items-center gap-3 shadow-sm bg-white p-3 rounded">
-
-        {/* Logo */}
         <img src={Logo} alt="Logo" style={{ width: "40px" }} />
-
-        {/* Page title */}
         <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>
-          Assigned Subjects
+          {t('assigned_subjects')}
         </h4>
       </div>
 
-      {/* Main card for subjects table */}
+      {/* Subjects Card */}
       <div className="card card-custom p-4">
 
-        {/* Table responsive for small screens */}
         <div className="table-responsive">
           <table className="table table-custom table-hover align-middle mb-0">
 
-            {/* Table headings */}
+            {/* Table Header */}
             <thead className="table-light">
               <tr>
-                <th style={{ width: "100px" }}>ID</th>
-                <th>Course Name</th>
-                <th>Start Date</th>
-                <th>Subject Name</th>
+                <th style={{ width: "100px" }}>{t('id')}</th>
+                <th>{t('header_course_name')}</th>
+                <th>{t('start_date')}</th>
+                <th>{t('header_subject_name')}</th>
+                <th>{t('schedule')}</th>
               </tr>
             </thead>
 
-            {/* Table body */}
+            {/* Table Body */}
             <tbody>
               {subjects.length > 0 ? (
-
-                // If subjects list is not empty -> map each subject in table row
                 subjects.map((s) => (
                   <tr key={s.id}>
-
-                    {/* Subject ID */}
                     <td>{s.id}</td>
 
-                    {/* Course name shown in badge */}
+                    {/* Course name */}
                     <td>
                       <span className="badge bg-light text-dark border">
                         {s.course}
                       </span>
                     </td>
 
-                    {/* Start date */}
+                    {/* Subject start date */}
                     <td>{s.date}</td>
 
-                    {/* Subject name highlighted */}
+                    {/* Subject name */}
                     <td className="fw-bold" style={{ color: "#1a237e" }}>
                       {s.subject}
+                    </td>
+
+                    {/* Schedule download */}
+                    <td>
+                      {s.schedulePath ? (
+                        <a
+                          href={`http://localhost:8080/api${s.schedulePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          <i className="bi bi-download me-1"></i> {t('download')}
+                        </a>
+                      ) : (
+                        // Show N/A if no schedule is uploaded
+                        <span className="text-muted">N/A</span>
+                      )}
                     </td>
                   </tr>
                 ))
               ) : (
-
-                // If no subjects assigned -> show message row
+                // Empty state when no subjects are assigned
                 <tr>
-                  <td colSpan="4" className="text-center text-muted py-3">
-                    No subjects assigned yet.
+                  <td colSpan="5" className="text-center text-muted py-3">
+                    {t('no_subjects_assigned')}
                   </td>
                 </tr>
               )}
@@ -111,5 +149,5 @@ const TeacherSubjects = () => {
   );
 };
 
+// ===================== EXPORT =====================
 export default TeacherSubjects;
-// Exporting component so it can be used in routing/pages

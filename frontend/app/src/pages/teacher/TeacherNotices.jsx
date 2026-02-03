@@ -1,116 +1,96 @@
-// React imports: useState for state management, useEffect for lifecycle (fetching data on load)
-import React, { useState, useEffect } from "react";
+// ===================== Teacher Notices Page=====================
 
-// Importing logo image for header UI
+// React hooks for state management and lifecycle handling
+import React, { useEffect, useState } from "react";
+
+// Internationalization (i18n) hook for translations
+import { useTranslation } from "react-i18next";
+
+// Application logo
 import Logo from "../../assets/Logo.png";
 
-// Importing bell icon for Notice Board title
+// Bell icon for notice board header
 import { FaBell } from "react-icons/fa";
 
-// Toast notifications container
-import { ToastContainer } from "react-toastify";
-
-// Default toastify CSS
+// Toast notifications for feedback and errors
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// Backend service to fetch teacher notices
+import { getTeacherNotices } from "../../services/teacherService";
+
+// ===================== COMPONENT =====================
+
 const TeacherNotices = () => {
-  // State to store notices data
+  // Translation function
+  const { t } = useTranslation();
+
+  /* ===================== STATE ===================== */
+
+  // State to store list of notices
   const [notices, setNotices] = useState([]);
 
-  // useEffect runs once when component loads (because dependency array is empty [])
+  /* ===================== LOAD NOTICES ===================== */
   useEffect(() => {
-    // Dummy fetched data (later you can replace this with API call)
-    const fetchedData = [
-      {
-        id: 1, // Unique notice ID
-        title: "Holiday Announcement", // Notice title
-        date: "17 Oct 2025", // Date of notice
-        description:
-          "The college will observe a holiday on October 18th for Diwali celebrations." // Full notice description
-      },
-      {
-        id: 2,
-        title: "Exam Schedule Update",
-        date: "23 Oct 2025",
-        description:
-          "The semester exam schedule has been revised. Exams will be conducted on 24 Oct."
-      },
-      {
-        id: 3,
-        title: "Faculty Meeting",
-        date: "23 Oct 2025",
-        description:
-          "Mandatory faculty meeting on 25th October 2025 at the Conference Hall regarding accreditation."
-      },
-      {
-        id: 4,
-        title: "Sports Fest Registration",
-        date: "25 Oct 2025",
-        description:
-          "Inter-college Sports Fest starts next week. Please submit student participant lists."
-      }
-    ];
-
-    // Setting fetched notices data into state
-    setNotices(fetchedData);
+    // Fetch notices related to the teacher
+    getTeacherNotices()
+      .then((res) => {
+        // Backend response structure contains data inside res.data.data
+        setNotices(res.data.data);
+      })
+      .catch(() => toast.error(t('failed_load_notices')));
   }, []);
 
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Toast notifications will appear in the top-right corner */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Page header section containing logo and title */}
+      {/* Page Header */}
       <div className="page-header mb-4 d-flex align-items-center gap-3 shadow-sm bg-white p-3 rounded">
-        {/* Institute logo */}
         <img src={Logo} alt="Logo" style={{ width: "40px" }} />
-
-        {/* Page title */}
         <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>
-          Notices
+          {t('notices')}
         </h4>
       </div>
 
-      {/* Main card container for notice board */}
+      {/* Notices Card */}
       <div className="card card-custom p-4">
-        {/* Notice board heading with icon */}
+        {/* Notice Board Title */}
         <h5
           className="fw-bold mb-4 d-flex align-items-center gap-2"
           style={{ color: "#1a237e" }}
         >
-          {/* Bell icon */}
-          <FaBell /> Notice Board
+          <FaBell /> {t('notice_board')}
         </h5>
 
-        {/* Wrapper for listing notices */}
+        {/* Notices List */}
         <div className="d-flex flex-column gap-3">
-          {/* If notices exist, map and show each notice card */}
           {notices.length > 0 ? (
             notices.map((n) => (
-              // Each notice card (key required for React list rendering)
               <div key={n.id} className="notice-card">
-                {/* Notice title + date section */}
+                {/* Notice Title and Date */}
                 <div
                   className="mb-2 ps-3"
                   style={{ borderLeft: "4px solid #1a237e" }}
                 >
-                  {/* Notice title */}
                   <div className="fw-bold text-dark">{n.title}</div>
-
-                  {/* Notice date */}
-                  <div className="small text-muted">{n.date}</div>
+                  <div className="small text-muted">
+                    {new Date(n.publishDate).toLocaleDateString()}
+                  </div>
                 </div>
 
-                {/* Notice description box */}
+                {/* Notice Description */}
                 <div className="bg-light p-3 rounded border text-secondary small shadow-sm">
                   {n.description}
                 </div>
               </div>
             ))
           ) : (
-            // If no notices available
+            // Empty state when no notices are available
             <p className="text-muted text-center py-4">
-              No new notices available.
+              {t('no_new_notices')}
             </p>
           )}
         </div>
@@ -119,5 +99,5 @@ const TeacherNotices = () => {
   );
 };
 
-// Exporting component so it can be used in other files
+// ===================== EXPORT =====================
 export default TeacherNotices;

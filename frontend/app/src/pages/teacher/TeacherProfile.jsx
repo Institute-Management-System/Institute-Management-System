@@ -1,292 +1,345 @@
-import React, { useState, useEffect, useRef } from "react";
-// useState  -> to store and update form values
-// useEffect -> to load/fetch data when component loads
-// useRef    -> to access DOM element directly (file input)
+// ===================== Teacher Profile Page=====================
 
-import Logo from "../../assets/Logo.png"; 
-// Institute logo for header
+// React hooks for state, lifecycle, and refs
+import React, { useEffect, useRef, useState } from "react";
 
-import AvatarDefault from "../../assets/teacher.png";
-// Default teacher profile image
+// Internationalization (i18n) support
+import { useTranslation } from "react-i18next";
 
-import { FaCamera } from "react-icons/fa";
-// Camera icon for Change Photo option
-
+// Toast notifications for feedback messages
 import { ToastContainer, toast } from "react-toastify";
-// ToastContainer -> required to show toast messages on screen
-// toast -> functions like toast.success(), toast.error()
 
+// Icons used in profile UI
+import { FaCamera, FaUserTie } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
-// react-toastify default styling
+
+// Application logo
+import Logo from "../../assets/Logo.png";
+
+// Backend services for profile operations
+import {
+  fetchTeacherProfile,
+  updateTeacherProfile,
+} from "../../services/teacherService";
+
+// Service for uploading profile images
+import ProfileService from "../../services/profile.service";
+
+// ===================== COMPONENT =====================
 
 const TeacherProfile = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // formData stores all teacher profile fields
+  /* ===================== USER CONTEXT ===================== */
+
+  // Get logged-in teacher details from session storage
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const teacherId = user?.id;
+
+  /* ===================== STATE ===================== */
+
+  // Form data for teacher profile
   const [formData, setFormData] = useState({
-    firstName: "",
-    designation: "",
+    id: "",
+    fullName: "",
     email: "",
-    mobile: "",
+    phone: "",
+    designation: "",
     password: "",
-    active: true,
+    status: false,
   });
 
-  // backupData stores old data so we can restore on Cancel button
+  // Backup data to restore on cancel
   const [backupData, setBackupData] = useState(null);
 
-  // avatar stores selected image preview (temporary)
-  const [avatar, setAvatar] = useState(null);
+  // Profile image preview URL
+  const [profileImage, setProfileImage] = useState(null);
 
-  // useRef is used to open file selector when user clicks photo section
+  // Selected image file for upload
+  const [imageFile, setImageFile] = useState(null);
+
+  // Reference to hidden file input
   const fileInputRef = useRef(null);
 
-  // useEffect runs only once when component loads (component mount)
+  /* ===================== LOAD PROFILE ===================== */
+
+  // Load teacher profile when teacherId is available
   useEffect(() => {
+    if (teacherId) {
+      loadProfile();
+    } else {
+      toast.error(t('user_not_authenticated'));
+    }
+  }, [teacherId]);
 
-    // Dummy fetched data (in real app comes from backend API)
-    const fetchedData = {
-      firstName: "Prathmesh",
-      designation: "Senior Teacher",
-      email: "prathmesh@gmail.com",
-      mobile: "9876543210",
-      password: "password123",
-      active: true,
-    };
+  // Fetch teacher profile details from backend
+  const loadProfile = async () => {
+    try {
+      const res = await fetchTeacherProfile(teacherId);
+      const data = res?.data?.data;
 
-    // Set fetched data in form
-    setFormData(fetchedData);
+      if (!data) throw new Error();
 
-    // Save a backup copy for Cancel option
-    setBackupData(fetchedData);
-  }, []);
+      // Prepare safe profile data with fallbacks
+      const safeData = {
+        id: data.id ?? "",
+        fullName: data.fullName ?? "",
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        designation: data.designation ?? "",
+        password: "",
+        status: data.status ?? false,
+      };
 
-  // handleChange function updates formData dynamically
-  // e.target.name = input field name
-  // e.target.value = new value user entered
+      // Update form and backup state
+      setFormData(safeData);
+      setBackupData(safeData);
+
+      // Set profile image if available
+      if (data.profileImage) {
+        setProfileImage(`http://localhost:8080/api${data.profileImage}`);
+      }
+    } catch {
+      toast.error(t('failed_load_profile'));
+    }
+  };
+
+  /* ===================== HANDLERS ===================== */
+
+  // Handle text input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // handleFileChange is called when user selects image file
+  // Handle profile image selection
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      // URL.createObjectURL -> creates temporary preview of selected image
-      setAvatar(URL.createObjectURL(e.target.files[0]));
-
-      // show success toast message
-      toast.success("Image selected successfully");
+    if (e.target.files?.[0]) {
+      const file = e.target.files[0];
+      setProfileImage(URL.createObjectURL(file));
+      setImageFile(file);
+      toast.success(t('photo_selected'));
     }
   };
 
-  // handleUpdate runs when user clicks Update button
-  const handleUpdate = () => {
-
-    // basic validation check
-    if (!formData.firstName || !formData.email || !formData.mobile) {
-      toast.error("Please fill in Name, Email, and Mobile fields.");
+  // Handle profile update submission
+  const handleUpdate = async () => {
+    // Basic validation
+    if (!formData.fullName || !formData.phone) {
+      toast.error(t('name_mobile_required'));
       return;
     }
 
-    // if validation passed, show success message
-    toast.success("Profile updated successfully!");
+    try {
+      // Upload profile image if selected
+      if (imageFile) {
+        await ProfileService.uploadImage(imageFile);
+      }
 
-    // update backupData with updated details
-    setBackupData(formData);
-  };
+      // Prepare update payload
+      const payload = {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        designation: formData.designation,
+      };
 
-  // handleCancel restores old form data
-  const handleCancel = () => {
-    if (backupData) {
-      // restore old saved data
-      setFormData(backupData);
+      // Include password only if changed
+      if (formData.password.trim() !== "") {
+        payload.password = formData.password;
+      }
 
-      // reset selected avatar preview
-      setAvatar(null);
+      // Update teacher profile
+      await updateTeacherProfile(teacherId, payload);
 
-      // show info message
-      toast.info("Changes discarded");
+      // Reset password field and image file
+      setBackupData({ ...formData, password: "" });
+      setFormData((prev) => ({ ...prev, password: "" }));
+      setImageFile(null);
+
+      // Reload profile to fetch updated image and data
+      await loadProfile();
+
+      toast.success(t('profile_updated_success'));
+    } catch {
+      toast.error(t('profile_update_failed'));
     }
   };
 
+  // Restore previous profile data
+  const handleCancel = () => {
+    if (backupData) {
+      setFormData(backupData);
+      setProfileImage(null);
+      toast.info(t('changes_discarded'));
+    }
+  };
+
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Toast container for showing toast popup messages */}
+      {/* Toast container */}
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* Header section */}
-      <div className="page-header">
-        <img src={Logo} alt="Logo" style={{ width: "40px" }} className="me-3" />
-        <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>Profile</h4>
+      {/* Page Header */}
+      <div className="page-header mb-4 d-flex align-items-center">
+        <img src={Logo} alt="Logo" style={{ width: 40 }} className="me-3" />
+        <h4 className="fw-bold mb-0" style={{ color: "#1a237e" }}>
+          {t('profile')}
+        </h4>
       </div>
 
-      {/* Center aligned card */}
+      {/* Profile Card */}
       <div className="d-flex justify-content-center">
-        <div className="card card-custom p-5 w-100" style={{ maxWidth: "850px" }}>
-          
-          {/* Profile image and basic info section */}
+        <div className="card p-5 w-100" style={{ maxWidth: 850 }}>
+          {/* Profile Header */}
           <div className="text-center border-bottom pb-4 mb-4">
-
-            {/* Profile image container */}
-            <div 
-              className="mx-auto mb-3 d-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm position-relative" 
-              style={{ 
-                width: '110px', 
-                height: '110px', 
-                overflow: 'hidden', 
-                border: '4px solid #fff',
-                cursor: 'pointer' 
-              }}
-              // when clicked it opens file selector
+            <div
+              className="mx-auto mb-3 d-flex align-items-center justify-content-center bg-light rounded-circle shadow-sm"
+              style={{ width: 110, height: 110, cursor: "pointer" }}
               onClick={() => fileInputRef.current.click()}
             >
-               {/* Show selected avatar else default avatar */}
-               <img 
-                 src={avatar || AvatarDefault} 
-                 alt="Profile" 
-                 className="w-100 h-100 object-fit-cover" 
-               />
+              {profileImage ? (
+                <img
+                  src={profileImage}
+                  alt="Profile"
+                  className="w-100 h-100 rounded-circle"
+                />
+              ) : (
+                <FaUserTie size={42} className="text-secondary" />
+              )}
             </div>
 
-            {/* Change photo option */}
-            <div 
-              className="mb-3 text-primary small fw-bold" 
-              style={{ cursor: 'pointer' }}
-              // on click open file selector
+            {/* Change photo trigger */}
+            <div
+              className="text-primary small fw-bold mb-2"
+              style={{ cursor: "pointer" }}
               onClick={() => fileInputRef.current.click()}
             >
-               <FaCamera className="me-1" /> Change Photo
+              <FaCamera className="me-1" />
+              {t('change_photo')}
             </div>
 
-            {/* Hidden input for file selection */}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              hidden 
+            {/* Hidden file input */}
+            <input
+              type="file"
+              hidden
+              ref={fileInputRef}
               accept="image/*"
-              onChange={handleFileChange} 
+              onChange={handleFileChange}
             />
 
-            {/* Display teacher name */}
-            <h4 className="fw-bold text-dark mb-1">
-              {formData.firstName || "Teacher Name"}
-            </h4>
-
-            {/* Static ID */}
-            <p className="text-muted">ID: 7673467</p>
+            <h4 className="fw-bold">{formData.fullName || t('teacher')}</h4>
+            <p className="text-muted">
+              {t('id')}: {formData.id || "N/A"}
+            </p>
           </div>
 
-          {/* Section Title */}
-          <h5 className="text-center text-muted mb-4 small fw-bold text-uppercase">
-            Personal Information
-          </h5>
+          {/* Profile Form */}
+          <h6 className="text-center text-muted fw-bold mb-4">
+            {t('personal_information')}
+          </h6>
 
-          {/* Form fields section */}
           <div className="row g-4">
-
-            {/* Name Field */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Name</label>
-              <input 
-                type="text" 
-                name="firstName" 
-                className="form-control" 
-                value={formData.firstName} 
-                onChange={handleChange} 
+              <label className="form-label fw-bold small">
+                {t('full_name')}
+              </label>
+              <input
+                className="form-control"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
               />
             </div>
 
-            {/* Designation Field */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Designation</label>
-              <input 
-                type="text" 
-                name="designation" 
-                className="form-control" 
-                value={formData.designation} 
-                onChange={handleChange} 
+              <label className="form-label fw-bold small">
+                {t('designation')}
+              </label>
+              <input
+                className="form-control"
+                name="designation"
+                value={formData.designation}
+                onChange={handleChange}
               />
             </div>
 
-            {/* Email Field */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Email</label>
-              <input 
-                type="email" 
-                name="email" 
-                className="form-control" 
-                value={formData.email} 
-                onChange={handleChange} 
+              <label className="form-label fw-bold small">
+                {t('email_address')}
+              </label>
+              <input
+                className="form-control"
+                value={formData.email}
+                disabled
               />
             </div>
 
-            {/* Mobile Field */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Mobile</label>
-              <input 
-                type="text" 
-                name="mobile" 
-                className="form-control" 
-                value={formData.mobile} 
-                onChange={handleChange} 
+              <label className="form-label fw-bold small">
+                {t('mobile')}
+              </label>
+              <input
+                className="form-control"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
               />
             </div>
 
-            {/* Password Field */}
+            {/* Password field */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Password</label>
-              <input 
-                type="password" 
-                name="password" 
-                className="form-control" 
-                value={formData.password} 
-                onChange={handleChange} 
+              <label className="form-label fw-bold small">
+                {t('new_password')}
+              </label>
+              <input
+                type="password"
+                className="form-control"
+                name="password"
+                placeholder="********"
+                value={formData.password}
+                onChange={handleChange}
               />
             </div>
-            
-            {/* Status display (Active/Inactive badge) */}
+
+            {/* Status display */}
             <div className="col-md-6">
-              <label className="form-label small text-muted fw-bold">Status</label>
+              <label className="form-label fw-bold small">
+                {t('status')}
+              </label>
               <div>
-                <span 
-                  // badge color depends on active boolean
-                  className={`badge rounded-pill ${formData.active ? 'bg-success' : 'bg-danger'} px-3 py-2`}
-                  style={{ userSelect: 'none', opacity: 0.8 }}
+                <span
+                  className={`badge ${
+                    formData.status ? "bg-success" : "bg-danger"
+                  } px-3 py-2`}
                 >
-                  {/* display active/inactive based on boolean */}
-                  {formData.active ? 'Active' : 'Inactive'}
+                  {formData.status ? t('active') : t('inactive')}
                 </span>
               </div>
             </div>
-
           </div>
 
-          {/* Buttons Section */}
+          {/* Action buttons */}
           <div className="d-flex justify-content-center gap-3 mt-5">
-
-            {/* Update button */}
-            <button 
-              className="btn btn-navy px-5 fw-bold shadow-sm" 
-              style={{ backgroundColor: '#1a237e', color: 'white' }} 
+            <button
+              className="btn btn-primary px-5 fw-bold"
               onClick={handleUpdate}
             >
-              Update
+              {t('update')}
             </button>
 
-            {/* Cancel button */}
-            <button 
-              className="btn btn-danger px-5 fw-bold shadow-sm" 
+            <button
+              className="btn btn-danger px-5 fw-bold"
               onClick={handleCancel}
             >
-              Cancel
+              {t('cancel')}
             </button>
-
           </div>
-
         </div>
       </div>
     </>
   );
 };
 
+// ===================== EXPORT =====================
 export default TeacherProfile;
-// exporting component so it can be used in routing or other files

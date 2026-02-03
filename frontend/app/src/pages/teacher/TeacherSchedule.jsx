@@ -1,126 +1,141 @@
+// ===================== Teacher Schedule Page=====================
+
+// React hooks for state management and lifecycle handling
 import React, { useState, useEffect } from "react";
+
+// Internationalization (i18n) hook for translations
+import { useTranslation } from "react-i18next";
 // useState  -> to store schedule data in component state
 // useEffect -> to fetch/load schedule data when component loads
 
+// Application logo
 import Logo from "../../assets/Logo.png";
 // Institute logo for header section
 
+// File icon used for timetable download/view action
 import { FaFileAlt } from "react-icons/fa";
 // File icon for timetable/view schedule button
 
+// Toast notifications for user feedback
 import { ToastContainer, toast } from "react-toastify";
 // ToastContainer -> required to display toast messages
-// toast -> used to show popup notifications (info/success)
+// toast -> used to show popup notifications (info/success/error)
 
+// Toastify default CSS
 import "react-toastify/dist/ReactToastify.css";
-// Toastify default styling
+
+// Backend service to fetch teacher subjects and schedules
+import { getTeacherSubjects } from "../../services/teacherService";
+
+// ===================== COMPONENT =====================
 
 const TeacherSchedule = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // scheduleData holds list of schedule objects
+  /* ===================== USER CONTEXT ===================== */
+
+  // Get logged-in teacher details from session storage
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const teacherId = user?.id;
+
+  /* ===================== STATE ===================== */
+
+  // State to hold schedule data fetched from backend
   const [scheduleData, setScheduleData] = useState([]);
 
-  // useEffect runs once when component loads (dependency array is empty)
+  /* ===================== LOAD SCHEDULE ===================== */
+
+  // Fetch schedule data when component loads or teacherId changes
   useEffect(() => {
+    if (teacherId) {
+      getTeacherSubjects(teacherId)
+        .then((res) => {
+          // Store API response in state
+          setScheduleData(res.data);
+        })
+        .catch(() => {
+          toast.error(t('failed_fetch_schedule'));
+        });
+    }
+  }, [teacherId]);
 
-    // Dummy schedule data (in real project this will come from backend API)
-    const fetchedData = [
-      { id: 101, course: "PG-DAC", subject: "Core Java", duration: "3 weeks" },
-      { id: 102, course: "PG-DAC", subject: "Web Programming", duration: "2 weeks" },
-      { id: 103, course: "PG-DBDA", subject: "Python", duration: "1 week" },
-      { id: 104, course: "PG-DMC", subject: "Advance Java", duration: "4 weeks" },
-      { id: 105, course: "PG-DESD", subject: "Embedded C", duration: "3 weeks" },
-    ];
+  /* ===================== VIEW TIMETABLE ===================== */
 
-    // store schedule data inside state
-    setScheduleData(fetchedData);
-  }, []); // [] means this will run only once on initial render
-
-  // this function runs when teacher clicks timetable icon button
-  const handleViewTimetable = (subject) => {
-    // currently only showing toast message
-    // later we can open a timetable page or modal
-    toast.info(`Opening schedule for ${subject}...`);
+  // Handle timetable view action (currently informational)
+  const handleViewTimetable = (subjectName) => {
+    toast.info(`Opening timetable for ${subjectName}`);
   };
 
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Toast container for notifications */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
       {/* Page Header */}
       <div className="page-header mb-4 d-flex align-items-center gap-3 shadow-sm bg-white p-3 rounded">
-        {/* Logo */}
         <img src={Logo} alt="Logo" style={{ width: "40px" }} />
-
-        {/* Title */}
         <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>
-          Class Schedule
+          {t('class_schedule')}
         </h4>
       </div>
 
-      {/* Main card containing schedule table */}
+      {/* Schedule Card */}
       <div className="card card-custom p-4">
-
-        {/* Table wrapper for responsiveness */}
         <div className="table-responsive">
-          <table className="table table-custom table-hover align-middle mb-0">
+          <table className="table table-hover align-middle mb-0">
 
             {/* Table Header */}
             <thead className="table-light">
               <tr>
-                <th style={{ width: "80px" }}>ID</th>
-                <th>Course Name</th>
-                <th>Subject Name</th>
-                <th>Duration</th>
-                <th className="text-center">Action</th>
+                <th style={{ width: "80px" }}>{t('id')}</th>
+                <th>{t('course_name')}</th>
+                <th>{t('subject_name')}</th>
+                <th>{t('start_date')}</th>
+                <th className="text-center">{t('action')}</th>
               </tr>
             </thead>
 
             {/* Table Body */}
             <tbody>
               {scheduleData.length > 0 ? (
-
-                // If schedule data exists -> map and show rows
                 scheduleData.map((row) => (
                   <tr key={row.id}>
-
-                    {/* Schedule ID */}
                     <td>{row.id}</td>
-
-                    {/* Course name */}
-                    <td className="fw-semibold">{row.course}</td>
-
-                    {/* Subject name */}
-                    <td style={{ color: "#1a237e" }}>{row.subject}</td>
-
-                    {/* Duration shown in badge */}
-                    <td>
-                      <span className="badge bg-light text-dark border px-3">
-                        {row.duration}
-                      </span>
-                    </td>
-
-                    {/* Action button to view timetable */}
+                    <td className="fw-semibold">{row.courseName}</td>
+                    <td style={{ color: "#1a237e" }}>{row.subjectName}</td>
+                    <td>{row.startDate}</td>
                     <td className="text-center">
-                      <button
-                        className="btn btn-sm btn-light border shadow-sm"
-                        // on click call handler with subject name
-                        onClick={() => handleViewTimetable(row.subject)}
-                        title="View Timetable"
-                      >
-                        {/* timetable icon */}
-                        <FaFileAlt className="text-secondary" />
-                      </button>
+                      {/* Show download button if timetable exists */}
+                      {row.timetablePath ? (
+                        <a
+                          href={`http://localhost:8080${row.timetablePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-light border shadow-sm"
+                          title={t('download_schedule')}
+                        >
+                          <FaFileAlt className="text-primary" />
+                        </a>
+                      ) : (
+                        // Disabled button if no timetable is available
+                        <button
+                          className="btn btn-sm btn-light border shadow-sm"
+                          disabled
+                          title="No Schedule"
+                        >
+                          <FaFileAlt className="text-muted" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
               ) : (
-
-                // If scheduleData is empty -> show message
+                // Empty state when no schedule data is available
                 <tr>
                   <td colSpan="5" className="text-center text-muted py-3">
-                    No schedule available.
+                    {t('no_schedule_available')}
                   </td>
                 </tr>
               )}
@@ -133,5 +148,5 @@ const TeacherSchedule = () => {
   );
 };
 
+// ===================== EXPORT =====================
 export default TeacherSchedule;
-// exporting component so it can be used in other files/routes
