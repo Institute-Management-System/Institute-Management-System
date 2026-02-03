@@ -19,7 +19,7 @@ public class Application {
 	 * Add @Bean annotated method to return ModelMapper instance
 	 * - to be managed by SC
 	 */
-	/*@Bean //method level annotation - to declare a method returning java object
+	@Bean //method level annotation - to declare a method returning java object
 	 ModelMapper modelMapper()
 	{
 		ModelMapper mapper=new ModelMapper();
@@ -29,7 +29,7 @@ public class Application {
 		//configure mapper - not to transfer nulls from src -> dest
 		.setPropertyCondition(Conditions.isNotNull());
 		return mapper;//Method rets configured ModelMapper bean to SC
-	}*/
+	}
 	
 
 }
