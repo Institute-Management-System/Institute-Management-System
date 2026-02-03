@@ -1,6 +1,5 @@
 package com.ims.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -24,13 +23,13 @@ public class Fee extends BaseEntity {
 	@ManyToOne
 	@JoinColumn(name = "course_id")
 	private Course course;
-	@Column(precision = 10, scale = 2)
-	private BigDecimal amount;
+	@Column
+	private Double amount;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private FeeStatus status;
 	@Column(name = "payment_date")
 	private LocalDate paymentDate;
 	@Column(name = "is_inactive")
-	private boolean inactive;
+	private Boolean inactive = false;
 }
