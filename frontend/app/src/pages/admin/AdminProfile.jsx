@@ -1,92 +1,137 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "../../assets/Logo.png";
 import Avatar from "../../assets/teacher.png";
-// Toastify is used for providing non-intrusive user feedback (notifications)
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTranslation } from "react-i18next";
+
+import ProfileService from "../../services/profile.service";
 
 const AdminProfile = () => {
-  /* INITIALIZING STATE:
-     Instead of multiple strings, we use a single object to manage all form fields.
-     This makes the state more organized and easier to scale.
-  */
+  const { t } = useTranslation();
   const [admin, setAdmin] = useState({
-    name: "Admin User",
-    email: "admin@example.com",
-    phone: "9876543210",
-    designation: "Teacher",
+    name: "",
+    email: "",
+    phone: "",
+    designation: "",
     password: "",
   });
 
-  /* DYNAMIC HANDLER: handleChange
-     This is a highly efficient way to handle multiple inputs.
-     1. [...admin]: Uses the spread operator to copy existing state (Immutability).
-     2. [e.target.name]: Uses "computed property names" to update the specific 
-        key that matches the input's 'name' attribute.
-  */
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await ProfileService.getProfile();
+      const data = response.data;
+      setAdmin({
+        name: data.fullName || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        designation: data.designation || "",
+        password: "", // Don't prefill password
+        profileImage: data.profileImage ? `http://localhost:8080/api${data.profileImage}` : null
+      });
+    } catch (error) {
+      console.error("Failed to load profile", error);
+      toast.error(t('failed_load_profile'));
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    try {
+      const response = await ProfileService.uploadImage(file);
+      setAdmin(prev => ({ ...prev, profileImage: response.data.imageUrl }));
+      toast.success(t('photo_selected'));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    }
+  };
+
   const handleChange = (e) =>
     setAdmin({ ...admin, [e.target.name]: e.target.value });
 
-  /* FORM SUBMISSION:
-     e.preventDefault() is crucial to stop the browser from refreshing the page.
-     In a real app, this is where an API 'PUT' or 'PATCH' request would occur.
-  */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Updated Profile:", admin);
-    toast.success("Profile Updated Successfully!");
+    try {
+      await ProfileService.updateProfile(admin);
+      toast.success(t('profile_updated_success'));
+      // Re-fetch to confirm sync/updates (optional if we trust local state)
+      // fetchProfile(); 
+    } catch (error) {
+      console.error(error);
+      toast.error(t('profile_update_failed'));
+    }
   };
 
   return (
     <div className="container-fluid p-0">
-      {/* HEADER: Clean navigation bar with branding */}
+      {/* HEADER */}
       <header className="d-flex align-items-center p-3 border-bottom bg-white shadow-sm">
         <img src={Logo} alt="Logo" width={45} className="me-3" />
-        <h4 className="mb-0 fw-bold">Admin Profile</h4>
+        <h4 className="mb-0 fw-bold">{t('admin_profile')}</h4>
       </header>
 
+      {/* PROFILE BODY */}
       <div className="container mt-5 d-flex justify-content-center">
-        {/* PROFILE CARD: Centered layout using Bootstrap's flex utilities */}
         <div className="card shadow-sm p-4 w-100" style={{ maxWidth: "700px", backgroundColor: "#f8f9fa" }}>
-          
-          {/* AVATAR SECTION: 
-              Shows a visual representation of the user and reflects state (admin.name/designation) 
-              in real-time as the user types in the form.
-          */}
-          <div className="text-center mb-4">
-            <img
-              src={Avatar}
-              alt="Admin"
-              className="rounded-circle shadow-sm"
-              style={{
-                width: 120,
-                height: 120,
-                objectFit: "cover",
-                border: "4px solid white",
-              }}
-            />
+
+          {/* AVATAR */}
+          <div className="text-center mb-4 position-relative">
+            <div className="position-relative d-inline-block">
+              <img
+                src={admin.profileImage ? admin.profileImage : Avatar}
+                alt="Admin"
+                className="rounded-circle shadow-sm"
+                style={{
+                  width: 120,
+                  height: 120,
+                  objectFit: "cover",
+                  border: "4px solid white",
+                }}
+              />
+              <label
+                htmlFor="upload-avatar"
+                className="position-absolute bottom-0 end-0 bg-primary text-white p-2 rounded-circle cursor-pointer shadow-sm"
+                style={{ cursor: "pointer" }}
+                title={t('upload_photo')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+                  <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z" />
+                </svg>
+              </label>
+              <input
+                type="file"
+                id="upload-avatar"
+                className="d-none"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files[0]) handleImageUpload(e.target.files[0]);
+                }}
+              />
+            </div>
             <h5 className="mt-3 fw-bold">{admin.name}</h5>
             <span className="badge bg-primary">{admin.designation}</span>
           </div>
 
-          {/* FORM: 
-              Each input is a "Controlled Component" because its 'value' is 
-              driven by the React state ('admin.field').
-          */}
+          {/* FORM */}
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
               <div className="col-md-6">
-                <label className="form-label fw-bold">Name</label>
+                <label className="form-label fw-bold">{t('full_name')}</label>
                 <input
                   type="text"
-                  name="name" // Matches the key in the state object
+                  name="name"
                   className="form-control"
                   value={admin.name}
                   onChange={handleChange}
                 />
               </div>
               <div className="col-md-6">
-                <label className="form-label fw-bold">Designation</label>
+                <label className="form-label fw-bold">{t('designation')}</label>
                 <input
                   type="text"
                   name="designation"
@@ -96,7 +141,7 @@ const AdminProfile = () => {
                 />
               </div>
               <div className="col-md-6">
-                <label className="form-label fw-bold">Email</label>
+                <label className="form-label fw-bold">{t('email_address')}</label>
                 <input
                   type="email"
                   name="email"
@@ -106,7 +151,7 @@ const AdminProfile = () => {
                 />
               </div>
               <div className="col-md-6">
-                <label className="form-label fw-bold">Phone</label>
+                <label className="form-label fw-bold">{t('phone')}</label>
                 <input
                   type="tel"
                   name="phone"
@@ -116,27 +161,26 @@ const AdminProfile = () => {
                 />
               </div>
               <div className="col-12">
-                <label className="form-label fw-bold">New Password</label>
+                <label className="form-label fw-bold">{t('new_password')}</label>
                 <input
                   type="password"
                   name="password"
                   className="form-control"
-                  placeholder="Leave blank to keep current"
+                  placeholder={t('leave_blank_password')}
                   value={admin.password}
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="col-12 text-center mt-4">
                 <button type="submit" className="btn btn-primary px-5 py-2 rounded-pill fw-bold">
-                  Update Profile
+                  {t('update_profile')}
                 </button>
               </div>
             </div>
           </form>
         </div>
       </div>
-      {/* ToastContainer: Required to actually render the toast notifications on screen */}
       <ToastContainer position="top-right" autoClose={2000} />
     </div>
   );
