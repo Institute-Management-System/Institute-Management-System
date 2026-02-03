@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Logo from "../../assets/Logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const AdminAddStudent = () => {
-  // Initialize navigation hook for redirecting the user
-  const navigate = useNavigate();
+import AdminService from "../../services/admin.service";
 
-  // State to manage the student form data object
+const AdminAddStudent = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { id } = useParams(); // Get ID from URL
+  const [isEditMode, setIsEditMode] = useState(false);
+
   const [student, setStudent] = useState({
     firstName: "",
     lastName: "",
@@ -18,63 +22,120 @@ const AdminAddStudent = () => {
     joiningDate: "",
     address: "",
     course: "",
+    qualification: "",
     gender: "",
-    status: true, // Default status is set to active
+    status: true,
   });
 
-  // Handler function to update state when form inputs change
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    fetchCourses();
+    if (id) {
+      setIsEditMode(true);
+      fetchStudent(id);
+    }
+  }, [id]);
+
+  const fetchCourses = async () => {
+    try {
+      const response = await AdminService.getAllCourses();
+      setCourses(response.data);
+    } catch (error) {
+      toast.error(t('failed_fetch_courses') || "Failed to fetch courses"); // Fallback or add key if missing
+    }
+  };
+
+  const fetchStudent = async (studentId) => {
+    try {
+      const response = await AdminService.getStudentById(studentId);
+      const data = response.data;
+      // Map data to state
+      setStudent({
+        firstName: data.fullName ? data.fullName.split(" ")[0] : "",
+        lastName: data.fullName ? data.fullName.split(" ").slice(1).join(" ") : "",
+        phone: data.phone || "",
+        email: data.email || "",
+        dob: data.dob || "",
+        joiningDate: data.admissionDate || "", // Mapping admissionDate to joiningDate
+        address: data.address || "",
+        course: "PG-DAC",
+        qualification: data.qualification || "", // Added qualification
+        gender: data.gender ? (data.gender.charAt(0) + data.gender.slice(1).toLowerCase()) : "",
+        status: data.status
+      });
+    } catch (error) {
+      toast.error(t('failed_fetch_student_details') || "Failed to fetch student details");
+    }
+  };
+
   const handleChange = (e) => {
-    // Determine the value based on input type (checkbox vs standard input)
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    
-    // Update the specific field in the student state using the input's name attribute
     setStudent({ ...student, [e.target.name]: value });
   };
 
-  // Handler for form submission
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevent default page reload behavior
-    console.log("Student Data:", student); // Log the captured data (Simulating API call)
-    toast.success("Student Added Successfully!"); // Display success notification
-    
-    // Reset the form fields to their initial empty state
-    setStudent({
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      dob: "",
-      joiningDate: "",
-      address: "",
-      course: "",
-      gender: "",
-      status: true,
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const studentData = {
+        firstName: student.firstName,
+        lastName: student.lastName,
+        email: student.email,
+        phone: student.phone,
+        dob: student.dob,
+        joiningDate: student.joiningDate,
+        address: student.address,
+        courseName: student.course,
+        qualification: student.qualification,
+        gender: student.gender,
+        status: student.status
+      };
+
+      if (isEditMode) {
+        await AdminService.updateStudent(id, studentData);
+        toast.success(t('student_updated_success'));
+        setTimeout(() => navigate("/admin/students/list"), 1500);
+      } else {
+        await AdminService.addStudent(studentData);
+        toast.success(t('student_added_success'));
+        setStudent({
+          firstName: "",
+          lastName: "",
+          phone: "",
+          email: "",
+          dob: "",
+          joiningDate: "",
+          address: "",
+          course: "",
+          gender: "",
+          status: true,
+          qualification: ""
+        });
+      }
+    } catch (error) {
+      console.error("Save Student Error", error);
+      toast.error(`${t('failed_save_student') || "Failed to save student"}. ` + (error.response?.data?.message || ""));
+    }
   };
 
   return (
     <div className="container-fluid p-0">
-      {/* Header Section: Displays Logo, Title, and Back Button */}
       <header className="d-flex align-items-center justify-content-between p-3 bg-white border-bottom shadow-sm">
         <div className="d-flex align-items-center">
           <img src={Logo} alt="Logo" width="45" className="me-3" />
-          <h3 className="mb-0 fw-bold">Add Student</h3>
+          <h3 className="mb-0 fw-bold">{isEditMode ? t('edit_student') : t('add_student')}</h3>
         </div>
-        {/* Button to navigate back to the previous page history */}
         <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
-          Back
+          {t('back')}
         </button>
       </header>
 
-      {/* Main Form Container */}
       <div className="container mt-5 d-flex justify-content-center">
         <div className="card shadow-sm p-4 w-100" style={{ maxWidth: "900px", backgroundColor: "#f8f9fa" }}>
           <form onSubmit={handleSubmit}>
             <div className="row g-3">
-              
-              {/* First Name Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">First Name</label>
+                <label className="form-label fw-bold">{t('first_name')}</label>
                 <input
                   type="text"
                   name="firstName"
@@ -85,9 +146,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Last Name Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Last Name</label>
+                <label className="form-label fw-bold">{t('last_name')}</label>
                 <input
                   type="text"
                   name="lastName"
@@ -98,9 +158,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Phone Number Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Phone Number</label>
+                <label className="form-label fw-bold">{t('phone_number')}</label>
                 <input
                   type="tel"
                   name="phone"
@@ -111,9 +170,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Email Address Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Email</label>
+                <label className="form-label fw-bold">{t('email_address')}</label>
                 <input
                   type="email"
                   name="email"
@@ -124,9 +182,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Date of Birth Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Date of Birth</label>
+                <label className="form-label fw-bold">{t('date_of_birth')}</label>
                 <input
                   type="date"
                   name="dob"
@@ -137,9 +194,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Joining Date Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Joining Date</label>
+                <label className="form-label fw-bold">{t('joining_date')}</label>
                 <input
                   type="date"
                   name="joiningDate"
@@ -150,9 +206,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Address Field */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Address</label>
+                <label className="form-label fw-bold">{t('address')}</label>
                 <input
                   type="text"
                   name="address"
@@ -163,9 +218,8 @@ const AdminAddStudent = () => {
                 />
               </div>
 
-              {/* Course Selection Dropdown */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Select Course</label>
+                <label className="form-label fw-bold">{t('select_course_label')}</label>
                 <select
                   name="course"
                   className="form-select"
@@ -173,16 +227,17 @@ const AdminAddStudent = () => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">-- Select Course --</option>
-                  <option value="PG-DAC">PG-DAC</option>
-                  <option value="PG-DMC">PG-DMC</option>
-                  <option value="PG-DBDA">PG-DBDA</option>
+                  <option value="">{t('select_course')}</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Gender Selection Dropdown */}
               <div className="col-md-6">
-                <label className="form-label fw-bold">Gender</label>
+                <label className="form-label fw-bold">{t('gender')}</label>
                 <select
                   name="gender"
                   className="form-select"
@@ -190,41 +245,40 @@ const AdminAddStudent = () => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select gender</option>
+                  <option value="">{t('select_gender')}</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
                 </select>
               </div>
 
-              {/* Status Toggle Switch (Active/Inactive) */}
               <div className="col-md-6">
-                <label className="form-label fw-bold d-block">Status</label>
+                <label className="form-label fw-bold d-block">{t('status')}</label>
                 <div className="form-check form-switch">
                   <input
                     className="form-check-input"
                     type="checkbox"
                     name="status"
                     checked={student.status}
-                    onChange={(e) => setStudent({...student, status: e.target.checked})}
+                    onChange={(e) =>
+                      setStudent({ ...student, status: e.target.checked })
+                    }
                   />
                   <label className="form-check-label">
-                    {student.status ? "Active" : "Inactive"}
+                    {student.status ? t('active') : t('inactive')}
                   </label>
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="col-12 text-center mt-4">
                 <button type="submit" className="btn btn-primary px-5 py-2 rounded-pill fw-bold">
-                  Add Student
+                  {isEditMode ? t('update_student') : t('add_student')}
                 </button>
               </div>
             </div>
           </form>
         </div>
       </div>
-      {/* Toast Container for displaying notifications */}
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
