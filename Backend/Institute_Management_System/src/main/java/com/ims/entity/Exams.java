@@ -19,26 +19,32 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString(callSuper = true)
 
-//JPA Annotations
+// JPA Annotations
 @Entity
 @Table(name = "exams")
-@AttributeOverride(name="id", column = @Column(name="exam_id"))
-public class Exams extends BaseEntity{
-	
+@AttributeOverride(name = "id", column = @Column(name = "exam_id"))
+public class Exams extends BaseEntity {
+
 	@ManyToOne
-	@JoinColumn(name="course_id")
+	@JoinColumn(name = "course_id")
 	private Course course;
-	
+
 	@ManyToOne
-	@JoinColumn(name = "subject_id") 
+	@JoinColumn(name = "subject_id")
 	private Subject subject;
-	
+
 	@Column(name = "exam_date")
 	private LocalDate examDate;
-	
+
 	@Column(name = "total_marks")
 	private int totalMarks;
-	
-	@Column(name="status")
-	private Boolean status = false;
+
+	@Column(name = "status")
+	private Boolean status = true;
+
+	@Column(name = "exam_name", length = 100)
+	private String examName;
+
+	@Column(name = "exam_link", length = 500)
+	private String examLink;
 }

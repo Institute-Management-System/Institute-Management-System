@@ -23,6 +23,9 @@ import lombok.*;
 public class Feedback extends BaseEntity {
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+    @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;
     @ManyToOne
@@ -34,7 +37,7 @@ public class Feedback extends BaseEntity {
     @Column(name = "feedback_date")
     private LocalDate feedbackDate;
     @NotNull
-    @Min(1) 
+    @Min(1)
     @Max(5)
     @Column(nullable = false)
     private int rating;
@@ -45,4 +48,3 @@ public class Feedback extends BaseEntity {
     @Column(name = "is_inactive")
     private Boolean isInactive = false;
 }
-
