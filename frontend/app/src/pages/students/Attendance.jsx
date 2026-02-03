@@ -1,183 +1,272 @@
-// Import React hooks for managing state and lifecycle
-import React, { useState, useEffect } from 'react';
+// React hooks for lifecycle, state management, and memoized functions
+import React, { useEffect, useState, useCallback } from "react";
 
-// Toast notification utilities
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// i18n hook for multi-language support
+import { useTranslation } from "react-i18next";
 
-// Attendance component
+// Toast notifications (used for alerts / feedback)
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// API service methods related to student attendance
+import {
+  fetchAttendanceTable,      // Fetches daily attendance records
+  fetchOverallAttendance,    // Fetches overall attendance summary
+  fetchMonthlyAttendance,    // Fetches month-wise attendance summary
+  fetchStudentCourses,       // Fetches courses enrolled by student
+} from "../../services/student.service";
+
 const Attendance = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // State to store attendance records
-  const [data, setData] = useState([]);
+  // Stores attendance table rows
+  const [tableData, setTableData] = useState([]);
 
-  // State to store selected month filter
-  const [monthFilter, setMonthFilter] = useState('All');
+  // Stores summary statistics (cards)
+  const [summary, setSummary] = useState({
+    total: 0,
+    present: 0,
+    absent: 0,
+    percentage: 0
+  });
 
-  // useEffect runs once when component loads
+  // Selected month filter ("All" or month number)
+  const [monthFilter, setMonthFilter] = useState("All");
+
+  // Loader flag for UI feedback
+  const [loading, setLoading] = useState(false);
+
+  // List of courses for dropdown
+  const [courses, setCourses] = useState([]);
+
+  // Selected course ID
+  const [selectedCourseId, setSelectedCourseId] = useState("");
+
+  // User ID fetched from session storage (token usually used in backend)
+  const userId = Number(sessionStorage.getItem("userId"));
+
+  /* ================= FETCH COURSES ON COMPONENT MOUNT ================= */
   useEffect(() => {
+    fetchStudentCourses().then((data) => {
+      if (data && data.length > 0) {
+        setCourses(data);
 
-    // Mock data simulating backend / database response
-    const mockDbResponse = [
-      { id: 101, subject: 'Java', date: '12-01-2025', status: 'Present' },
-      { id: 102, subject: 'Python', date: '15-01-2025', status: 'Absent' },
-      { id: 103, subject: 'Java', date: '02-02-2025', status: 'Present' },
-      { id: 104, subject: 'C++', date: '10-02-2025', status: 'Present' },
-      { id: 105, subject: 'React', date: '20-03-2025', status: 'Present' },
-      { id: 106, subject: 'DevOps', date: '05-08-2025', status: 'Present' },
-      { id: 107, subject: 'Cloud', date: '11-11-2025', status: 'Absent' },
-    ];
+        // Automatically select first course
+        setSelectedCourseId(data[0].courseId);
+      }
+    });
+  }, []);
 
-    // Store fetched data in state
-    setData(mockDbResponse);
-  }, []); // Empty dependency array → runs only once
+  // Attendance year (can be made dynamic later)
+  const YEAR = 2026;
 
-  // Called when month dropdown value changes
-  const handleFilterChange = (e) => {
-    const selected = e.target.value;
+  /* ================= MAIN DATA LOADER ================= */
+  const loadData = useCallback(async () => {
+    setLoading(true);
 
-    // Update selected month filter
-    setMonthFilter(selected);
+    try {
+      let summaryRes;
+      let startDate;
+      let endDate;
 
-    // Get selected month name from dropdown
-    const monthName = e.target.options[e.target.selectedIndex].text;
+      // Prevent API call if course is not selected
+      if (!selectedCourseId) {
+        setLoading(false);
+        return;
+      }
 
-    // Show toast notification
-    toast.info(`Showing attendance for: ${monthName}`);
-  };
+      /* ---------- SUMMARY DATA ---------- */
+      if (monthFilter === "All") {
+        // Fetch yearly summary
+        summaryRes = await fetchOverallAttendance({
+          courseId: selectedCourseId
+        });
 
-  // Filter data based on selected month
-  // If "All", show full data
-  const filteredList = monthFilter === 'All' 
-    ? data 
-    : data.filter(item => item.date.split('-')[1] === monthFilter);
+        startDate = `${YEAR}-01-01`;
+        endDate = `${YEAR}-12-31`;
+      } else {
+        // Fetch month-wise summary
+        const month = String(monthFilter).padStart(2, "0");
 
-  // Total records after filter
-  const total = filteredList.length;
+        summaryRes = await fetchMonthlyAttendance({
+          courseId: selectedCourseId,
+          month: `${YEAR}-${month}`
+        });
 
-  // Count of present records
-  const present = filteredList.filter(item => item.status === 'Present').length;
+        startDate = `${YEAR}-${month}-01`;
+        endDate = `${YEAR}-${month}-31`;
+      }
 
-  // Absent count derived from total - present
-  const absent = total - present;
+      // Update summary cards
+      setSummary({
+        total: summaryRes?.totalLectures ?? 0,
+        present: summaryRes?.presentCount ?? 0,
+        absent: summaryRes?.absentCount ?? 0,
+        percentage: summaryRes?.attendancePercentage ?? 0
+      });
 
-  // Attendance percentage calculation
-  const percentage = total === 0 ? 0 : ((present / total) * 100).toFixed(1);
+      /* ---------- TABLE DATA ---------- */
+      const tableRes = await fetchAttendanceTable({
+        courseId: selectedCourseId,
+        startDate,
+        endDate
+      });
+
+      // Ensure table data is always an array
+      setTableData(Array.isArray(tableRes) ? tableRes : []);
+    } catch (error) {
+      console.error("Attendance Fetch Error:", error);
+      setTableData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedCourseId, monthFilter]);
+
+  /* ================= RELOAD DATA WHEN FILTER CHANGES ================= */
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
-    <>
-      {/* Toast notifications container */}
+    <div className="container mt-4">
+      {/* Toast messages */}
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Main card container */}
-      <div className="card card-custom p-4 shadow-sm">
-
-        {/* Header section with title and month filter */}
+      <div className="card p-4 shadow-sm border-0">
+        {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h5 className="fw-bold mb-0">Attendance Tracker</h5>
+          <h4 className="fw-bold text-primary">
+            {t('attendance_tracker')}
+          </h4>
 
-          {/* Month filter dropdown */}
-          <select 
-            className="form-select w-auto shadow-sm"
-            value={monthFilter}
-            onChange={handleFilterChange}
-          >
-            <option value="All">All Months</option>
-            <option value="01">January</option>
-            <option value="02">February</option>
-            <option value="03">March</option>
-            <option value="04">April</option>
-            <option value="05">May</option>
-            <option value="06">June</option>
-            <option value="07">July</option>
-            <option value="08">August</option>
-            <option value="09">September</option>
-            <option value="10">October</option>
-            <option value="11">November</option>
-            <option value="12">December</option>
-          </select>
-        </div>
+          <div className="d-flex gap-2">
+            {/* Course Dropdown */}
+            <select
+              className="form-select w-auto"
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(e.target.value)}
+            >
+              {courses.map((c) => (
+                <option key={c.courseId} value={c.courseId}>
+                  {c.courseName}
+                </option>
+              ))}
+            </select>
 
-        {/* Summary statistics section */}
-        <div className="row text-center mb-4">
+            {/* Month Dropdown */}
+            <select
+              className="form-select w-auto"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+            >
+              <option value="All">
+                {t('all_months_option')}
+              </option>
 
-          {/* Total count */}
-          <div className="col-3">
-            <div className="p-3 bg-light rounded">
-              <h6 className="text-muted">Total</h6>
-              <h4 className="fw-bold">{total}</h4>
-            </div>
-          </div>
-
-          {/* Present count */}
-          <div className="col-3">
-            <div className="p-3 bg-success bg-opacity-10 rounded">
-              <h6 className="text-success">Present</h6>
-              <h4 className="fw-bold text-success">{present}</h4>
-            </div>
-          </div>
-
-          {/* Absent count */}
-          <div className="col-3">
-            <div className="p-3 bg-danger bg-opacity-10 rounded">
-              <h6 className="text-danger">Absent</h6>
-              <h4 className="fw-bold text-danger">{absent}</h4>
-            </div>
-          </div>
-
-          {/* Attendance percentage */}
-          <div className="col-3">
-            <div className="p-3 bg-primary bg-opacity-10 rounded">
-              <h6 className="text-primary">Percent</h6>
-              <h4 className="fw-bold text-primary">{percentage}%</h4>
-            </div>
+              {/* Dynamically generate 12 months */}
+              {[...Array(12)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  {new Date(0, i).toLocaleString("default", {
+                    month: "long"
+                  })}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Attendance table */}
+        {/* ================= SUMMARY CARDS ================= */}
+        <div className="row g-3 mb-4">
+          <SummaryBox title={t('summary_total')} value={summary.total} />
+          <SummaryBox title={t('summary_present')} value={summary.present} type="success" />
+          <SummaryBox title={t('summary_absent')} value={summary.absent} type="danger" />
+          <SummaryBox
+            title={t('summary_attendance_percentage')}
+            value={`${summary.percentage?.toFixed(1)}%`}
+            type="primary"
+          />
+        </div>
+
+        {/* ================= ATTENDANCE TABLE ================= */}
         <div className="table-responsive">
           <table className="table table-hover align-middle border">
-
-            {/* Table header */}
             <thead className="table-light">
               <tr>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
+                <th>{t('date')}</th>
+                <th>{t('subject')}</th>
+                <th className="text-center">{t('status')}</th>
               </tr>
             </thead>
 
-            {/* Table body */}
             <tbody>
-
-              {/* Loop through filtered attendance records */}
-              {filteredList.map((row) => (
-                <tr key={row.id}>
-                  <td className="fw-bold">{row.subject}</td>
-                  <td>{row.date}</td>
-                  <td>
-                    <span className={`badge ${row.status === 'Present' ? 'bg-success' : 'bg-danger'}`}>
-                      {row.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-
-              {/* Message when no records are available */}
-              {filteredList.length === 0 && (
+              {/* Loader State */}
+              {loading ? (
                 <tr>
-                  <td colSpan="3" className="text-center py-3 text-muted">
-                    No records found
+                  <td colSpan="3" className="text-center py-4">
+                    {t('loading_attendance')}
                   </td>
                 </tr>
+
+              /* Empty State */
+              ) : tableData.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="text-center py-4 text-muted">
+                    {t('no_records_found')}
+                  </td>
+                </tr>
+
+              /* Data Rows */
+              ) : (
+                tableData.map((row, index) => (
+                  <tr key={index}>
+                    <td>{row.attendanceDate}</td>
+                    <td className="fw-semibold">{row.subjectName}</td>
+                    <td className="text-center">
+                      <span
+                        className={`badge ${
+                          row.status === "PRESENT"
+                            ? "bg-success"
+                            : "bg-danger"
+                        }`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-// Export component
+/* ================= SUMMARY CARD COMPONENT ================= */
+const SummaryBox = ({ title, value, type }) => {
+  // Color mapping based on card type
+  const colorMap = {
+    success: "bg-success text-success",
+    danger: "bg-danger text-danger",
+    primary: "bg-primary text-primary"
+  };
+
+  return (
+    <div className="col-md-3">
+      <div
+        className={`p-3 rounded-3 border-start border-4 ${
+          colorMap[type] || "bg-light text-dark"
+        } bg-opacity-10 shadow-sm`}
+      >
+        <div className="small fw-bold opacity-75 text-uppercase">
+          {title}
+        </div>
+        <h3 className="mb-0 fw-bold">{value}</h3>
+      </div>
+    </div>
+  );
+};
+
 export default Attendance;

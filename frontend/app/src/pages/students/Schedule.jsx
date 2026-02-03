@@ -1,99 +1,129 @@
-// Import React and required hooks
-import React, { useState, useEffect } from 'react';
+// React hooks for component lifecycle and state management
+import React, { useState, useEffect } from "react";
 
-// Icon for download button
-import { FaFileAlt } from 'react-icons/fa';
+// i18n hook for multilingual text support
+import { useTranslation } from "react-i18next";
 
-// Toast notifications for user feedback
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// Toast notifications for error handling and feedback
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// API service to fetch student subject timetable
+import { fetchStudentSubjectTimetable } from "../../services/student.service";
 
 const Schedule = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // State to store schedule data (subjects list)
+  // Schedule list
   const [schedules, setSchedules] = useState([]);
 
-  // Runs once when component mounts
-  useEffect(() => {
-    // Mock data (later this can come from backend API)
-    const fetchedData = [
-      { id: 101, course: 'PG-DAC', subject: 'Core Java', duration: '2 months' },
-      { id: 102, course: 'PG-DAC', subject: 'Web Technologies', duration: '3 months' },
-      { id: 103, course: 'PG-DAC', subject: 'Python', duration: '1 week' },
-      { id: 104, course: 'PG-DAC', subject: 'Advance Java', duration: '4 weeks' },
-    ];
+  // Loader flag
+  const [loading, setLoading] = useState(false);
 
-    // Save fetched data into state
-    setSchedules(fetchedData);
+  /* ================= LOAD SCHEDULE ON COMPONENT MOUNT ================= */
+  useEffect(() => {
+    loadSchedule();
   }, []);
 
-  // Handles timetable download click
-  const handleDownload = () => {
-    // Shows toast message (simulating download)
-    toast.info('Downloading full timetable...');
+  /* ================= FETCH SCHEDULE FROM BACKEND ================= */
+  const loadSchedule = async () => {
+    try {
+      setLoading(true);
+
+      // API call to fetch timetable
+      const data = await fetchStudentSubjectTimetable();
+      setSchedules(data);
+    } catch (error) {
+      toast.error(t("failed_fetch_schedule"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      {/* Toast container to display notifications */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
+      {/* ================= CLASS SCHEDULE CARD ================= */}
       <div className="card card-custom p-4">
-        
-        {/* Page Title */}
-        <h5 className="fw-bold mb-2">Class Schedule</h5>
+        {/* Header */}
+        <h5 className="fw-bold mb-4">
+          {t("class_schedule")}
+        </h5>
 
-        {/* Common timetable section (shown once, not per row) */}
-        <div className="d-flex align-items-center gap-2 mb-4">
-          <span className="fw-semibold">Timetable:</span>
-
-          {/* Download button for full timetable */}
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            onClick={handleDownload}
-            title="Download Timetable"
-          >
-            <FaFileAlt className="me-1" />
-            Download
-          </button>
-        </div>
-
-        {/* Table wrapper for responsiveness */}
+        {/* ================= SCHEDULE TABLE ================= */}
         <div className="table-responsive">
           <table className="table table-hover align-middle">
-            
-            {/* Table header */}
             <thead className="table-light">
               <tr>
-                <th className="text-center">ID</th>
-                <th className="text-center">COURSE</th>
-                <th className="text-center">SUBJECT</th>
-                <th className="text-center">DURATION</th>
+                <th className="text-center">{t("id")}</th>
+                <th className="text-center">{t("course")}</th>
+                <th className="text-center">{t("subject")}</th>
+                <th className="text-center">{t("duration")}</th>
+                <th className="text-center">{t("schedule")}</th>
               </tr>
             </thead>
 
-            {/* Table body */}
             <tbody>
-              {/* Looping through schedules array */}
-              {schedules.map((row, index) => (
-                <tr key={row.id}>
-                  <td className="text-center">{index + 1}</td>
-                  <td className="text-center">{row.course}</td>
-                  <td className="text-center fw-semibold">{row.subject}</td>
-                  <td className="text-center">{row.duration}</td>
+              {/* Loading State */}
+              {loading && (
+                <tr>
+                  <td colSpan="4" className="text-center py-3">
+                    {t("loading_schedule")}
+                  </td>
                 </tr>
-              ))}
+              )}
 
-              {/* Message when no data is available */}
-              {schedules.length === 0 && (
+              {/* Data Rows */}
+              {!loading &&
+                schedules.map((row, index) => (
+                  <tr key={`${row.subjectId}-${index}`}>
+                    <td className="text-center">
+                      {index + 1}
+                    </td>
+
+                    <td className="text-center">
+                      {row.courseName}
+                    </td>
+
+                    <td className="text-center fw-semibold">
+                      {row.subjectName}
+                    </td>
+
+                    <td className="text-center">
+                      {row.duration} {t("duration_days")}
+                    </td>
+
+                    <td className="text-center">
+                      {row.schedulePath ? (
+                        /* Download schedule file */
+                        <a
+                          href={`http://localhost:8080/api${row.schedulePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-primary"
+                        >
+                          {t("download")}
+                        </a>
+                      ) : (
+                        /* No schedule available */
+                        <span className="text-muted">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+
+              {/* Empty State */}
+              {!loading && schedules.length === 0 && (
                 <tr>
                   <td colSpan="4" className="text-center text-muted py-3">
-                    No schedules available.
+                    {t("no_schedule_available")}
                   </td>
                 </tr>
               )}
             </tbody>
-
           </table>
         </div>
       </div>

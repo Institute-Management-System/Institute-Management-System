@@ -1,98 +1,141 @@
-// Importing React and required hooks from react
-import React, { useState, useEffect } from 'react';
+// React hooks for state management and lifecycle
+import React, { useState, useEffect } from "react";
 
-// Functional component named Subjects
+// i18n hook for multilingual support
+import { useTranslation } from "react-i18next";
+
+// Toast notifications for error handling
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// API service to fetch enrolled subjects
+import { fetchEnrolledSubjects } from "../../services/student.service";
+
 const Subjects = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // useState hook to store list of subjects
-  // subjectList → current state value
-  // setSubjectList → function to update the state
+  // List of enrolled subjects
   const [subjectList, setSubjectList] = useState([]);
 
-  // useEffect runs after the component renders
-  // Empty dependency array [] means this will run ONLY ONCE (componentDidMount)
+  // Loader flag
+  const [loading, setLoading] = useState(false);
+
+  /* ================= LOAD SUBJECTS ON COMPONENT MOUNT ================= */
   useEffect(() => {
-
-    // Simulated fetched data (as if coming from API/backend)
-    const fetchedData = [
-      { id: 101, course: 'PG-DAC', date: '01-02-2025', subject: 'Core Java' },
-      { id: 102, course: 'PG-DAC', date: '02-03-2025', subject: 'C++ Programming' },
-      { id: 103, course: 'PG-DAC', date: '04-03-2025', subject: 'Python' },
-      { id: 104, course: 'PG-DAC', date: '20-07-2025', subject: 'Advance Java' },
-    ];
-
-    // Updating state with fetched data
-    // This triggers a re-render of the component
-    setSubjectList(fetchedData);
-
+    loadSubjects();
   }, []);
 
-  // JSX returned by the component
+  /* ================= FETCH ENROLLED SUBJECTS ================= */
+  const loadSubjects = async () => {
+    try {
+      setLoading(true);
+
+      // API call to fetch subjects student is enrolled in
+      const data = await fetchEnrolledSubjects();
+      setSubjectList(data);
+    } catch (error) {
+      toast.error(t("failed_load_subjects"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="card card-custom p-4">
-      
-      {/* Card heading */}
-      <h5 className="mb-4 fw-bold">Enrolled Subjects</h5>
+    <>
+      {/* Toast notification container */}
+      <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Makes table scrollable on small screens */}
-      <div className="table-responsive">
+      {/* ================= ENROLLED SUBJECTS CARD ================= */}
+      <div className="card card-custom p-4">
+        {/* Header */}
+        <h5 className="mb-4 fw-bold">
+          {t("enrolled_subjects")}
+        </h5>
 
-        <table className="table table-custom table-hover align-middle">
-
-          {/* Table header */}
-          <thead className="table-light">
-            <tr>
-              <th className="text-center">ID</th>
-              <th className="text-center">COURSE</th>
-              <th className="text-center">START DATE</th>
-              <th className="text-center">SUBJECT NAME</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {/* Looping through subjectList using map */}
-            {subjectList.map((s, index) => (
-              
-              // Each row must have a unique key (React requirement)
-              <tr key={s.id}>
-                
-                {/* Displaying serial number using index */}
-                <td className="text-center">{index + 1}</td>
-
-                {/* Course displayed inside a badge */}
-                <td className="text-center">
-                  <span className="badge bg-light text-dark border">
-                    {s.course}
-                  </span>
-                </td>
-
-                {/* Subject start date */}
-                <td className="text-center text-muted">{s.date}</td>
-
-                {/* Subject name styled in bold and primary color */}
-                <td className="text-center fw-semibold text-primary">
-                  {s.subject}
-                </td>
-              </tr>
-            ))}
-
-            {/* Conditional rendering:
-                If subjectList is empty, show this message */}
-            {subjectList.length === 0 && (
+        {/* ================= SUBJECTS TABLE ================= */}
+        <div className="table-responsive">
+          <table className="table table-custom table-hover align-middle">
+            <thead className="table-light">
               <tr>
-                <td colSpan="4" className="text-center text-muted py-3">
-                  No subjects enrolled.
-                </td>
+                <th className="text-center">{t("id")}</th>
+                <th className="text-center">{t("courses")}</th>
+                <th className="text-center">{t("start_date")}</th>
+                <th className="text-center">{t("subject_name")}</th>
+                <th className="text-center">{t("schedule")}</th>
               </tr>
-            )}
+            </thead>
 
-          </tbody>
-        </table>
+            <tbody>
+              {/* Loading State */}
+              {loading && (
+                <tr>
+                  <td colSpan="4" className="text-center py-3">
+                    {t("loading_subjects")}
+                  </td>
+                </tr>
+              )}
+
+              {/* Data Rows */}
+              {!loading &&
+                subjectList.map((s, index) => (
+                  <tr key={`${s.id}-${index}`}>
+                    <td className="text-center">
+                      {index + 1}
+                    </td>
+
+                    {/* Course Name */}
+                    <td className="text-center">
+                      <span className="badge bg-light text-dark border">
+                        {s.courseName}
+                      </span>
+                    </td>
+
+                    {/* Subject Assigned Date */}
+                    <td className="text-center text-muted">
+                      {s.assignedDate}
+                    </td>
+
+                    {/* Subject Name */}
+                    <td className="text-center fw-semibold text-primary">
+                      {s.subjectName}
+                    </td>
+
+                    {/* Schedule Download */}
+                    <td className="text-center">
+                      {s.schedulePath ? (
+                        <a
+                          href={`http://localhost:8080/api${s.schedulePath}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          <i className="bi bi-download me-1"></i>
+                          {t("download")}
+                        </a>
+                      ) : (
+                        <span className="text-muted">
+                          N/A
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+
+              {/* Empty State */}
+              {!loading && subjectList.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="text-center text-muted py-3">
+                    {t("no_subjects_enrolled")}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
-// Exporting component so it can be used in other files
 export default Subjects;
