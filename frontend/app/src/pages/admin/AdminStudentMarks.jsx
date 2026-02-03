@@ -1,86 +1,138 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import AdminService from "../../services/admin.service";
+import { ToastContainer, toast } from "react-toastify";
 import Logo from "../../assets/Logo.png";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const AdminStudentMarks = () => {
-  // Initialize navigation hook for page redirection
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  
-  // State variables to store the selected filter criteria
-  const [course, setCourse] = useState("");
-  const [subject, setSubject] = useState("");
+  const [courses, setCourses] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [marks, setMarks] = useState([]);
 
-  // Handler function to process the search action
-  const handleSearch = () => {
-    // Validate that both fields are selected before proceeding
-    if(!course || !subject) {
-      toast.error("Please select both Course and Subject");
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const response = await AdminService.getAllCourses();
+      setCourses(response.data);
+    } catch (error) {
+      toast.error(t('failed_fetch_courses'));
+    }
+  };
+
+  const handleCourseChange = async (e) => {
+    const courseId = e.target.value;
+    setSelectedCourse(courseId);
+    setSelectedSubject("");
+    setMarks([]);
+    if (courseId) {
+      try {
+        const subjectResponse = await AdminService.getAllSubjects();
+        const filtered = subjectResponse.data.filter(s => s.course && s.course.id.toString() === courseId);
+        setSubjects(filtered);
+      } catch (error) {
+        toast.error(t('failed_fetch_subjects'));
+      }
+    } else {
+      setSubjects([]);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!selectedCourse || !selectedSubject) {
+      toast.warning(t('select_course_subject_warning'));
       return;
     }
-    // Navigate to the results page (simulated route)
-    navigate("/admin/students/view-marks");
+    try {
+      const response = await AdminService.getMarksByCourseAndSubject(selectedCourse, selectedSubject);
+      setMarks(response.data);
+    } catch (error) {
+      toast.error(t('error_fetching_marks'));
+    }
   };
 
   return (
     <div className="container-fluid p-0">
-      {/* Header Section: Contains the Logo, Page Title, and Back Button */}
       <header className="d-flex align-items-center justify-content-between p-3 bg-white border-bottom shadow-sm">
         <div className="d-flex align-items-center">
-          <img src={Logo} width={45} alt="Logo" className="me-3" />
-          <h3 className="mb-0 fw-bold">View Marks</h3>
+          <img src={Logo} alt="Logo" width="45" className="me-3" />
+          <h3 className="mb-0 fw-bold">{t('student_marks')}</h3>
         </div>
-        {/* Button to return to the previous page history */}
-        <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
+          {t('back')}
+        </button>
       </header>
 
-      {/* Main Content: Centered Card for Search Criteria */}
-      <div className="container mt-5 d-flex justify-content-center">
-        <div className="card shadow-sm p-5 w-100" style={{ maxWidth: "600px", backgroundColor: "#f8f9fa" }}>
-          <h4 className="text-center fw-bold mb-4">Search Criteria</h4>
-
-          {/* Course Selection Dropdown */}
-          <div className="mb-3">
-            <label className="form-label fw-bold">Course Name</label>
-            <select
-              className="form-select"
-              value={course}
-              onChange={(e) => setCourse(e.target.value)}
-            >
-              <option value="">-- Select Course --</option>
-              <option value="PG-DAC">PG-DAC</option>
-              <option value="PG-DBDA">PG-DBDA</option>
-            </select>
+      <div className="container mt-4">
+        {/* Search Section */}
+        <div className="card p-4 mb-4 shadow-sm border-0">
+          <div className="row g-3">
+            <div className="col-md-5">
+              <select className="form-select" value={selectedCourse} onChange={handleCourseChange}>
+                <option value="">{t('select_course_label')}</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div className="col-md-5">
+              <select className="form-select" value={selectedSubject} onChange={(e) => setSelectedSubject(e.target.value)} disabled={!selectedCourse}>
+                <option value="">{t('select_subject')}</option>
+                {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <button className="btn btn-primary w-100" onClick={handleSearch}>{t('search_action')}</button>
+            </div>
           </div>
+        </div>
 
-          {/* Subject Selection Dropdown */}
-          <div className="mb-4">
-            <label className="form-label fw-bold">Subject Name</label>
-            <select
-              className="form-select"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            >
-              <option value="">-- Select Subject --</option>
-              <option value="Java">Java</option>
-              <option value="Python">Python</option>
-            </select>
-          </div>
-
-          {/* Search Button to trigger validation and navigation */}
-          <div className="text-center">
-            <button
-              className="btn btn-primary px-5 py-2 fw-bold rounded-pill"
-              onClick={handleSearch}
-            >
-              Search Records
-            </button>
+        {/* Table Section */}
+        <div className="card shadow-sm border-0">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover mb-0 text-center align-middle">
+              <thead className="table-light">
+                <tr>
+                  <th className="py-3">{t('roll_no')}</th>
+                  <th className="py-3">{t('header_student_info')}</th>
+                  <th className="py-3">{t('obtained_marks')}</th>
+                  <th className="py-3">{t('total_marks')}</th>
+                  <th className="py-3">{t('exam_date')}</th>
+                  <th className="py-3">{t('status')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {marks.map((mark, index) => (
+                  <tr key={index}>
+                    <td className="fw-bold">{mark.rollNumber}</td>
+                    <td>{mark.studentName}</td>
+                    <td>{mark.obtainedMarks}</td>
+                    <td>{mark.totalMarks}</td>
+                    <td>{mark.examDate}</td>
+                    <td>
+                      <span className={`badge rounded-pill px-3 ${mark.status === 'PASS' ? 'bg-success' : 'bg-danger'}`}>
+                        {mark.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {marks.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="text-center p-4">{t('no_marks_found')}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-      
-      {/* Toast Container to display validation error messages */}
       <ToastContainer position="top-right" autoClose={2000} />
     </div>
   );

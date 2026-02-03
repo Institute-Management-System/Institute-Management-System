@@ -6,104 +6,70 @@ import Logo from '../../assets/Logo.png';
 import { useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";
 
-const AdminStudentAttendance = () => {
+const AdminTeacherAttendance = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [attendanceData, setAttendanceData] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState("");
 
   useEffect(() => {
     fetchAttendance();
-    fetchCourses();
   }, []);
 
   const fetchAttendance = async () => {
     try {
-      const response = await AdminService.getStudentAttendanceList();
+      const response = await AdminService.getTeacherAttendanceList();
       setAttendanceData(response.data);
     } catch (error) {
       toast.error(t('failed_fetch_attendance'));
     }
   };
 
-  const fetchCourses = async () => {
-    try {
-      const response = await AdminService.getAllCourses();
-      setCourses(response.data);
-    } catch (error) {
-      toast.error(t('failed_fetch_courses'));
-    }
-  };
-
-  const filteredData = selectedCourse
-    ? attendanceData.filter((record) => record.courseName === selectedCourse)
-    : attendanceData;
-
   return (
     <div className="container-fluid p-0">
       <header className="d-flex align-items-center justify-content-between p-3 bg-white border-bottom shadow-sm">
         <div className="d-flex align-items-center">
           <img src={Logo} alt="Logo" width="45" className="me-3" />
-          <h3 className="mb-0 fw-bold">{t('student_attendance')}</h3>
+          <h3 className="mb-0 fw-bold">{t('teacher_attendance')}</h3>
         </div>
         <button className="btn btn-outline-secondary" onClick={() => navigate(-1)}>
           {t('back')}
         </button>
       </header>
       <div className="container mt-4">
-        {/* Filter Section */}
-        <div className="d-flex justify-content-end mb-3">
-          <div className="w-25">
-            <select
-              className="form-select"
-              value={selectedCourse}
-              onChange={(e) => setSelectedCourse(e.target.value)}
-            >
-              <option value="">{t('all_courses')}</option>
-              {courses.map(course => (
-                <option key={course.id} value={course.name}>{course.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
         <div className="card shadow-sm border-0">
           <div className="table-responsive">
             <table className="table table-hover table-striped mb-0 text-center align-middle">
               <thead className="table-light">
                 <tr>
-                  <th className="py-3">{t('roll_no')}</th>
-                  <th className="py-3">{t('header_student_info')}</th>
-                  <th className="py-3">{t('courses')}</th>
+                  <th className="py-3">{t('id')}</th>
+                  <th className="py-3">{t('teachers')}</th>
                   <th className="py-3">{t('attendance_percentage')}</th>
                   <th className="py-3">{t('status')}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredData.map((record, index) => (
+                {attendanceData.map((record, index) => (
                   <tr key={index}>
-                    <td className="fw-bold">{record.rollNumber}</td>
+                    <td className="fw-bold">{record.id}</td>
                     <td>{record.fullName}</td>
-                    <td>{record.courseName}</td>
                     <td className="fw-bold text-primary">{record.attendancePercentage}%</td>
                     <td>
                       <span
-                        className={`badge rounded-pill px-3 ${record.attendancePercentage >= 75
+                        className={`badge rounded-pill px-3 ${record.attendancePercentage >= 90
                           ? 'bg-success'
-                          : record.attendancePercentage >= 60
-                            ? 'bg-warning text-dark'
-                            : 'bg-danger'
+                          : record.attendancePercentage >= 80
+                            ? 'bg-primary'
+                            : 'bg-warning text-dark'
                           }`}
                       >
-                        {record.attendancePercentage >= 75 ? t('status_good') : record.attendancePercentage >= 60 ? t('status_average') : t('status_low')}
+                        {record.attendancePercentage >= 90 ? t('status_excellent') : record.attendancePercentage >= 80 ? t('status_good') : t('status_needs_improve')}
                       </span>
                     </td>
                   </tr>
                 ))}
-                {filteredData.length === 0 && (
+                {attendanceData.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="text-center p-4">{t('no_attendance_records')}</td>
+                    <td colSpan="4" className="text-center p-4">{t('no_attendance_records')}</td>
                   </tr>
                 )}
               </tbody>
@@ -116,4 +82,4 @@ const AdminStudentAttendance = () => {
   );
 };
 
-export default AdminStudentAttendance;
+export default AdminTeacherAttendance;
