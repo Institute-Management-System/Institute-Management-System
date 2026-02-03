@@ -1,228 +1,290 @@
-import React, { useState, useEffect } from "react";
-// useState  -> to store students list, marks, course info
-// useEffect -> to load data when component loads
+// ===================== Teacher Evaluate Student Page=====================
 
+// React hooks for state management, lifecycle handling, and memoization
+import React, { useEffect, useMemo, useState } from "react";
+
+// Internationalization (i18n) support
+import { useTranslation } from "react-i18next";
+
+// Application logo
 import Logo from "../../assets/Logo.png";
-// Logo image for header
 
+// Toast notifications for user feedback
 import { ToastContainer, toast } from "react-toastify";
-// ToastContainer -> required to display toast messages
-// toast -> used to show success/error popup messages
-
 import "react-toastify/dist/ReactToastify.css";
-// toast default css
+
+// Backend services related to subjects, students, and marks
+import {
+  getTeacherSubjects,
+  getStudentsForMarksByName,
+  submitMarks,
+} from "../../services/teacherService";
+
+// ===================== COMPONENT =====================
 
 const TeacherEvaluateStudent = () => {
+  // Translation function
+  const { t } = useTranslation();
 
-  // students state holds list of student objects (roll no + name)
+  // Retrieve logged-in teacher details from session storage
+  const user = JSON.parse(sessionStorage.getItem("user"));
+  const teacherId = user?.id;
+
+  /* ===================== STATE ===================== */
+
+  // Subjects assigned to the teacher
+  const [subjects, setSubjects] = useState([]);
+
+  // Selected course and subject
+  const [courseName, setCourseName] = useState("");
+  const [subjectName, setSubjectName] = useState("");
+
+  // Students loaded for evaluation
   const [students, setStudents] = useState([]);
 
-  // marks state stores marks for each student in key-value format
+  // Marks mapped by studentId
   const [marks, setMarks] = useState({});
 
-  // courseInfo holds course name and subject name entered by teacher
-  const [courseInfo, setCourseInfo] = useState({ course: "", subject: "" });
-
-  // useEffect runs once on first render (component mount)
+  /* ===================== LOAD SUBJECTS ===================== */
   useEffect(() => {
-    // Dummy student data (in real app this will come from backend API)
-    const fetchedStudents = [
-      { id: 101, name: "Aarav Sharma" },
-      { id: 102, name: "Diya Patel" },
-      { id: 103, name: "Rohan Mehra" },
-      { id: 104, name: "Ananya Singh" },
-      { id: 105, name: "Vikram Malhotra" },
-    ];
+    // Fetch subjects assigned to the teacher
+    if (teacherId) {
+      getTeacherSubjects(teacherId)
+        .then((res) => setSubjects(res.data))
+        .catch(() => toast.error(t('failed_load_subjects')));
+    }
+  }, [teacherId]);
 
-    // store students list into state
-    setStudents(fetchedStudents);
-  }, []);
-  
-  // function updates marks state when teacher enters marks
-  const handleMarkChange = (studentId, value) => {
-    setMarks((prev) => ({
-      ...prev,          // keep previous marks
-      [studentId]: value, // update current student mark
-    }));
-  };
+  /* ===================== UNIQUE COURSES ===================== */
 
-  // function returns Pass/Fail based on marks
-  const getStatus = (mark) => {
-    // if mark not entered yet -> show "-"
-    if (!mark) return "-";
+  // Extract unique course names from subjects list
+  const courses = useMemo(() => {
+    return [...new Set(subjects.map((s) => s.courseName))];
+  }, [subjects]);
 
-    // pass condition: marks >= 40
-    return parseInt(mark) >= 40 ? "Pass" : "Fail";
-  };
+  /* ===================== FILTER SUBJECTS ===================== */
 
-  // Submit button handler
-  const handleSubmit = (e) => {
-    e.preventDefault(); // prevents page refresh on submit
+  // Filter subjects based on selected course
+  const filteredSubjects = useMemo(() => {
+    return subjects.filter((s) => s.courseName === courseName);
+  }, [courseName, subjects]);
 
-    // validation: course & subject required
-    if (!courseInfo.course || !courseInfo.subject) {
-      toast.error("Please enter Course and Subject details");
+  /* ===================== LOAD STUDENTS ===================== */
+
+  // Load students for the selected course and subject
+  const loadStudents = () => {
+    if (!courseName || !subjectName) {
+      toast.error(t('please_select_course_subject'));
       return;
     }
 
-    // Preparing payload for backend
-    // It creates array containing marks for each student
-    const payload = students.map((student) => ({
-      studentId: student.id,
-      marks: marks[student.id] || 0, // if no marks entered then 0
-      status: getStatus(marks[student.id]), // pass/fail
-    }));
+    getStudentsForMarksByName(courseName, subjectName)
+      .then((res) => {
+        // Set students list
+        setStudents(res.data);
 
-    // In real project, payload will be sent using API call
-    // axios.post("/submitMarks", payload)
-
-    toast.success("Marks submitted successfully!");
+        // Initialize marks state with existing marks if available
+        const init = {};
+        res.data.forEach((s) => {
+          init[s.studentId] = s.obtainedMarks ?? "";
+        });
+        setMarks(init);
+      })
+      .catch(() => toast.error(t('failed_load_students')));
   };
 
+  /* ===================== MARK CHANGE HANDLER ===================== */
+
+  // Update marks for a student with validation (0 to 100)
+  const handleMarkChange = (studentId, value) => {
+    if (value === "" || (Number(value) >= 0 && Number(value) <= 100)) {
+      setMarks((prev) => ({
+        ...prev,
+        [studentId]: value,
+      }));
+    }
+  };
+
+  /* ===================== STATUS CALCULATION ===================== */
+
+  // Determine pass/fail status based on obtained marks
+  const getStatus = (mark) => {
+    if (mark === "" || mark === undefined) return "-";
+    return Number(mark) >= 40 ? "PASS" : "FAIL";
+  };
+
+  /* ===================== SAVE MARKS ===================== */
+
+  // Submit evaluated marks to backend
+  const handleSave = () => {
+    if (students.length === 0) {
+      toast.error(t('no_students_to_save'));
+      return;
+    }
+
+    // Prepare payload for marks submission
+    const payload = {
+      courseName,
+      subjectName,
+      marksList: students.map((s) => ({
+        studentId: s.studentId,
+        obtainedMarks: Number(marks[s.studentId] || 0),
+      })),
+    };
+
+    submitMarks(payload)
+      .then(() => toast.success(t('marks_saved_success')))
+      .catch(() => toast.error(t('failed_save_marks')));
+  };
+
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Toast container for notifications */}
+      {/* Toast notification container */}
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Page Header Section */}
-      <div className="page-header mb-4 d-flex align-items-center gap-3 shadow-sm bg-white p-3 rounded">
-        <img src={Logo} alt="Logo" style={{ width: "40px" }} />
-        <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>
-          Evaluate Student
-        </h4>
+      {/* Page Header */}
+      <div className="page-header mb-4 d-flex align-items-center gap-3">
+        <img src={Logo} alt="Logo" style={{ width: 40 }} />
+        <h4 className="fw-bold mb-0">{t('evaluate_students')}</h4>
       </div>
 
-      {/* Main container */}
-      <div className="container-fluid p-0">
-        <div className="card card-custom p-4">
+      <div className="card p-4">
+        {/* ===================== FILTER SECTION ===================== */}
+        <div className="row g-3 mb-4">
+          {/* Course Selection */}
+          <div className="col-md-4">
+            <label className="fw-bold small">{t('header_course')}</label>
+            <select
+              className="form-select"
+              value={courseName}
+              onChange={(e) => {
+                setCourseName(e.target.value);
+                setSubjectName("");
+                setStudents([]);
+              }}
+            >
+              <option value="">{t('select_course')}</option>
+              {courses.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          {/* Form starts here */}
-          <form onSubmit={handleSubmit}>
+          {/* Subject Selection */}
+          <div className="col-md-4">
+            <label className="fw-bold small">{t('header_subject')}</label>
+            <select
+              className="form-select"
+              value={subjectName}
+              disabled={!courseName}
+              onChange={(e) => setSubjectName(e.target.value)}
+            >
+              <option value="">{t('select_subject')}</option>
+              {filteredSubjects.map((s) => (
+                <option
+                  key={`${s.courseName}-${s.subjectName}`}
+                  value={s.subjectName}
+                >
+                  {s.subjectName}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Course + Subject input section */}
-            <div className="row g-3 mb-4">
-
-              {/* Course name input */}
-              <div className="col-md-6">
-                <label className="form-label fw-bold text-muted small">Course Name</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="e.g. PG-DAC"
-                  value={courseInfo.course}
-                  // updating courseInfo.course
-                  onChange={(e) =>
-                    setCourseInfo({ ...courseInfo, course: e.target.value })
-                  }
-                />
-              </div>
-
-              {/* Subject name input */}
-              <div className="col-md-6">
-                <label className="form-label fw-bold text-muted small">Subject Name</label>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="e.g. Core Java"
-                  value={courseInfo.subject}
-                  // updating courseInfo.subject
-                  onChange={(e) =>
-                    setCourseInfo({ ...courseInfo, subject: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Table Title */}
-            <h5 className="fw-bold mb-3 text-dark">Enter Marks</h5>
-            
-            {/* Marks Entry Table */}
-            <div className="table-responsive">
-              <table className="table table-custom table-bordered align-middle">
-
-                {/* Table Heading */}
-                <thead className="table-light">
-                  <tr>
-                    <th style={{ width: "100px" }} className="text-center">Roll No</th>
-                    <th>Student Name</th>
-                    <th style={{ width: "200px" }}>Marks (Out of 100)</th>
-                    <th style={{ width: "150px" }} className="text-center">Status</th>
-                  </tr>
-                </thead>
-
-                {/* Table Body */}
-                <tbody>
-                  {students.map((student) => {
-
-                    // marks entered for current student
-                    const currentMark = marks[student.id] || "";
-
-                    // calculate pass/fail status
-                    const status = getStatus(currentMark);
-                    
-                    return (
-                      <tr key={student.id}>
-
-                        {/* Student roll no */}
-                        <td className="text-center">{student.id}</td>
-
-                        {/* Student name */}
-                        <td className="fw-bold text-dark">{student.name}</td>
-
-                        {/* Input for marks */}
-                        <td>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            className="form-control text-center"
-                            placeholder="0"
-                            value={currentMark}
-                            // update marks for student
-                            onChange={(e) =>
-                              handleMarkChange(student.id, e.target.value)
-                            }
-                          />
-                        </td>
-
-                        {/* Pass/Fail badge */}
-                        <td className="text-center">
-                          <span 
-                            className={`badge ${
-                              status === "Pass"
-                                ? "bg-success"
-                                : status === "Fail"
-                                ? "bg-danger"
-                                : "bg-secondary"
-                            }`}
-                            style={{ minWidth: "60px" }}
-                          >
-                            {status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Submit button */}
-            <div className="d-flex justify-content-center mt-4">
-              <button 
-                type="submit" 
-                className="btn text-white px-5 py-2 fw-bold shadow-sm"
-                style={{ backgroundColor: "#1a237e" }}
-              >
-                Submit Marks
-              </button>
-            </div>
-          </form>
+          {/* Load Students Button */}
+          <div className="col-md-4 d-flex align-items-end">
+            <button
+              type="button"
+              className="btn btn-primary w-100"
+              onClick={loadStudents}
+            >
+              {t('load_students')}
+            </button>
+          </div>
         </div>
+
+        {/* ===================== MARKS TABLE ===================== */}
+        <div className="table-responsive">
+          <table className="table table-bordered align-middle">
+            <thead className="table-light">
+              <tr>
+                <th className="text-center">{t('roll_no')}</th>
+                <th>{t('header_student_name')}</th>
+                <th className="text-center">{t('marks')}</th>
+                <th className="text-center">{t('status')}</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {/* Empty state */}
+              {students.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="text-center text-muted">
+                    {t('no_students_loaded')}
+                  </td>
+                </tr>
+              )}
+
+              {/* Student rows */}
+              {students.map((s) => {
+                const mark = marks[s.studentId];
+                const status = getStatus(mark);
+
+                return (
+                  <tr key={s.studentId}>
+                    <td className="text-center">{s.rollNumber}</td>
+                    <td className="fw-bold">{s.studentName}</td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        className="form-control text-center"
+                        value={mark}
+                        onChange={(e) =>
+                          handleMarkChange(s.studentId, e.target.value)
+                        }
+                      />
+                    </td>
+                    <td className="text-center">
+                      <span
+                        className={`badge ${
+                          status === "PASS"
+                            ? "bg-success"
+                            : status === "FAIL"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        }`}
+                      >
+                        {status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Save Marks Button */}
+        {students.length > 0 && (
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              className="btn btn-success px-5 fw-bold"
+              onClick={handleSave}
+            >
+              {t('save_marks')}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
 };
 
+// ===================== EXPORT =====================
 export default TeacherEvaluateStudent;
-// exporting component so it can be used in routes/pages

@@ -1,102 +1,159 @@
-import React, { useState, useEffect } from "react"; 
-// React import + hooks:
-// useState = to store data in state
-// useEffect = to run code automatically when component loads
+// ===================== Teacher Dashboard Page =====================
 
-import Logo from "../../assets/Logo.png"; 
-// Importing institute logo image
+// React hooks for state management and lifecycle handling
+import React, { useState, useEffect } from "react";
 
-import { FaUserGraduate, FaMoneyBillWave, FaClipboardCheck, FaInfoCircle } from "react-icons/fa";
-// Importing icons from react-icons library
+// Application logo
+import Logo from "../../assets/Logo.png";
+
+// Icons used for dashboard statistics and notices
+import {
+  FaUserGraduate,
+  FaMoneyBillWave,
+  FaClipboardCheck,
+  FaInfoCircle,
+} from "react-icons/fa";
+
+// Backend services to fetch dashboard-related data
+import {
+  getStudentCount,
+  getStudentCountForTeacher,
+  getAverageAttendance,
+  getTopTeacherNotices,
+  getAssignedSubjectCount
+} from "../../services/teacherService";
+
+// Icon for subjects
+import { FaBook } from "react-icons/fa";
+
+// Internationalization (i18n) support
+import { useTranslation } from "react-i18next";
+
+// ===================== COMPONENT =====================
 
 const TeacherDashboard = () => {
-  // stats = cards data (total students, salary, attendance)
-  // notices = list of recent notices
+  // Translation function
+  const { t } = useTranslation();
+
+  /* ===================== STATE ===================== */
+
+  // Dashboard stats configuration array
   const [stats, setStats] = useState([]);
+
+  // Latest notices list
   const [notices, setNotices] = useState([]);
 
-  // useEffect runs once when component mounts (page loads)
+  // Individual stat values
+  const [studentCount, setStudentCount] = useState(0);
+  const [averageAttendance, setAverageAttendance] = useState("0/0");
+  const [subjectCount, setSubjectCount] = useState(0);
+
+  /* ================= LOAD DASHBOARD DATA ================= */
   useEffect(() => {
-    // Dummy backend data (later you will fetch from API)
-    const backendStats = [
-      { title: "TOTAL STUDENTS", value: "500", subtext: "" },
-      { title: "SALARY", value: "50,000", subtext: "Credited for this month" },
-      { title: "ATTENDANCE", value: "75/100", subtext: "Average Class Attendance" }
-    ];
+    // Get logged-in teacher from session storage
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const teacherId = user?.id;
 
-    // Dummy backend notices data
-    const backendNotices = [
-      { id: 1, title: "Holiday Announcement", date: "17 Oct 2025", desc: "The college will observe a holiday on October 18st for Diwali celebrations." },
-      { id: 2, title: "Exam Schedule Update", date: "23 Oct 2025", desc: "Exam will be conducted on 24 Oct." },
-      { id: 3, title: "Faculty meeting", date: "23 Oct 2025", desc: "Faculty meeting on 25th October 2025 at Conference Hall." },
-      { id: 4, title: "Sports Fest", date: "25 Oct 2025", desc: "Inter-college Sports Fest starts on 25th October 2025." }
-    ];
+    // ---------------- STUDENT COUNT (Teacher Specific) ----------------
+    if (teacherId) {
+      getStudentCountForTeacher(teacherId)
+        .then((res) => setStudentCount(res.data))
+        .catch(() => console.error("Failed to load student count"));
+    }
 
-    // Setting data into state
-    setStats(backendStats);
-    setNotices(backendNotices);
-  }, []); 
-  // Empty dependency array [] means run only once on first render
+    // ---------------- AVERAGE ATTENDANCE ----------------
+    getAverageAttendance()
+      .then((res) => setAverageAttendance(res.data))
+      .catch(() => setAverageAttendance("0/0"));
 
-  // This function returns styling based on the stat title
-  // It helps in showing different icons + background colors
+    // ---------------- ASSIGNED SUBJECT COUNT ----------------
+    if (teacherId) {
+      getAssignedSubjectCount(teacherId)
+        .then((res) => setSubjectCount(res.data))
+        .catch(() => console.error("Failed to load subject count"));
+    }
+
+    // ---------------- TOP 5 TEACHER NOTICES ----------------
+    getTopTeacherNotices()
+      .then((res) => setNotices(res.data.data))
+      .catch(() => console.error("Failed to load notices"));
+  }, []);
+
+  /* ================= UPDATE STATS ================= */
+  useEffect(() => {
+    // Prepare stats data for rendering
+    setStats([
+      {
+        title: "total_students",
+        value: studentCount,
+        subtext: "",
+      },
+      {
+        title: "subjects_assigned",
+        value: subjectCount,
+        subtext: "Total Subjects Assigned",
+      },
+      {
+        title: "average_attendance",
+        value: averageAttendance,
+        subtext: "Average Monthly Class Attendance",
+      },
+    ]);
+  }, [studentCount, averageAttendance, subjectCount]);
+
+  /* ================= STAT STYLE HANDLER ================= */
+  // Returns icon and styling based on stat type
   const getStatStyle = (title) => {
     switch (title) {
-      case "TOTAL STUDENTS":
+      case "total_students":
         return { icon: <FaUserGraduate />, bg: "#e0f2fe", color: "#0284c7" };
-      case "SALARY":
-        return { icon: <FaMoneyBillWave />, bg: "#dcfce7", color: "#16a34a" };
-      case "ATTENDANCE":
+      case "subjects_assigned":
+        return { icon: <FaBook />, bg: "#e0e7ff", color: "#4338ca" };
+      case "average_attendance":
         return { icon: <FaClipboardCheck />, bg: "#ffedd5", color: "#ea580c" };
       default:
         return { icon: <FaInfoCircle />, bg: "#f3f4f6", color: "#4b5563" };
     }
   };
 
+  /* ===================== UI ===================== */
   return (
     <>
-      {/* Top Header Section */}
+      {/* Page Header */}
       <div className="page-header mb-4 d-flex align-items-center">
-        {/* Institute Logo */}
         <img src={Logo} alt="Logo" style={{ width: "40px" }} className="me-3" />
-
-        {/* Institute Title */}
         <h4 className="mb-0 fw-bold" style={{ color: "#1a237e" }}>
-          INSTITUTE MANAGEMENT SYSTEM
+          {t('institute_management_system')}
         </h4>
       </div>
 
-      {/* Main Layout Row */}
       <div className="row g-4">
-
-        {/* Left Side: Stat Cards (TOTAL STUDENTS, SALARY, ATTENDANCE) */}
-        <div className="col-lg-5 d-flex flex-column gap-3">
+        {/* LEFT SECTION: STAT CARDS */}
+        <div className="col-12 col-md-12 col-lg-5 d-flex flex-column gap-3">
           {stats.map((stat, index) => {
-            // Get icon, background color, and icon color based on title
             const style = getStatStyle(stat.title);
-
             return (
               <div key={index} className="card card-custom p-4">
                 <div className="d-flex justify-content-between align-items-center">
-
-                  {/* Left side: Title + value + subtext */}
                   <div>
                     <h6 className="text-muted fw-bold small text-uppercase">
-                      {stat.title}
+                      {t(stat.title)}
                     </h6>
-                    <h2 className="fw-bold mb-0 text-dark">{stat.value}</h2>
+                    <h2 className="fw-bold mb-0 text-dark">
+                      {stat.value}
+                    </h2>
                     <small className="text-muted">{stat.subtext}</small>
                   </div>
 
-                  {/* Right side: Icon box */}
+                  {/* Stat Icon */}
                   <div
                     className="d-flex align-items-center justify-content-center rounded"
                     style={{
                       width: "50px",
                       height: "50px",
-                      backgroundColor: style.bg, // background color from getStatStyle
-                      color: style.color,        // icon color from getStatStyle
-                      fontSize: "1.5rem"         // icon size
+                      backgroundColor: style.bg,
+                      color: style.color,
+                      fontSize: "1.5rem",
                     }}
                   >
                     {style.icon}
@@ -107,43 +164,30 @@ const TeacherDashboard = () => {
           })}
         </div>
 
-        {/* Right Side: Notices Section */}
-        <div className="col-lg-7">
+        {/* RIGHT SECTION: LATEST NOTICES */}
+        <div className="col-12 col-md-12 col-lg-7">
           <div className="card card-custom h-100 p-4">
-
-            {/* Notice Header */}
-            <h5
-              className="fw-bold mb-4 d-flex align-items-center gap-2"
-              style={{ color: "#1a237e" }}
-            >
-              <FaInfoCircle /> Recent Notices
+            <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
+              <FaInfoCircle /> {t('latest_notices')}
             </h5>
 
-            {/* Notice List */}
-            <div className="d-flex flex-column gap-3">
-              {notices.map((n) => (
-                <div key={n.id} className="notice-card">
-
-                  {/* Notice Title Row */}
-                  <div
-                    className="d-flex justify-content-between align-items-center mb-2 ps-2"
-                    style={{ borderLeft: "4px solid #1a237e" }} // left blue border
-                  >
-                    {/* Notice title */}
-                    <div className="fw-bold text-dark ms-2">{n.title}</div>
-
-                    {/* Notice date */}
-                    <div className="small text-muted">{n.date}</div>
-                  </div>
-
-                  {/* Notice Description */}
-                  <div className="bg-light p-3 rounded text-secondary small">
-                    {n.desc}
+            {/* Notices List */}
+            {notices.length > 0 ? (
+              notices.map((n) => (
+                <div key={n.id} className="mb-3">
+                  <div className="fw-bold">{n.title}</div>
+                  <small className="text-muted">
+                    {new Date(n.publishDate).toLocaleDateString()}
+                  </small>
+                  <div className="bg-light p-3 rounded mt-1">
+                    {n.description}
                   </div>
                 </div>
-              ))}
-            </div>
-
+              ))
+            ) : (
+              // Empty state when no notices are available
+              <p className="text-muted">{t('no_notices')}</p>
+            )}
           </div>
         </div>
       </div>
@@ -151,5 +195,5 @@ const TeacherDashboard = () => {
   );
 };
 
+// ===================== EXPORT =====================
 export default TeacherDashboard;
-// Exporting component so it can be used in routing/pages
