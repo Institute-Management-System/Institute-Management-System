@@ -110,7 +110,7 @@ const TeacherSchedule = () => {
                       {/* Show download button if timetable exists */}
                       {row.timetablePath ? (
                         <a
-                          href={`http://localhost:8080${row.timetablePath}`}
+                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}${row.timetablePath}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn btn-sm btn-light border shadow-sm"

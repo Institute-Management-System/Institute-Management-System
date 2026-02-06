@@ -10,7 +10,9 @@ import java.util.Map;
 public class LoggerClientService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String LOGGER_API_URL = "http://localhost:5000/api/log";
+
+    @org.springframework.beans.factory.annotation.Value("${app.logger.url}")
+    private String loggerApiUrl;
 
     @Async
     public void logToNetService(String level, String message) {
@@ -26,7 +28,7 @@ public class LoggerClientService {
             org.springframework.http.HttpEntity<Map<String, String>> request = new org.springframework.http.HttpEntity<>(
                     logPayload, headers);
 
-            restTemplate.postForLocation(LOGGER_API_URL, request);
+            restTemplate.postForLocation(loggerApiUrl, request);
         } catch (Exception e) {
             // Silently fail if logger service is down to avoid impacting main flow
             System.err.println("Failed to connect to .NET Logger Service: " + e.getMessage());

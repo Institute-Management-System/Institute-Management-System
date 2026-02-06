@@ -100,7 +100,7 @@ const Schedule = () => {
                       {row.schedulePath ? (
                         /* Download schedule file */
                         <a
-                          href={`http://localhost:8080/api${row.schedulePath}`}
+                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}${row.schedulePath}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn btn-sm btn-primary"

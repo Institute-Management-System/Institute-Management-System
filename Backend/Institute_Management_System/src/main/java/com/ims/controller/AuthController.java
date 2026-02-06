@@ -56,6 +56,9 @@ public class AuthController {
         @Autowired
         private EmailService emailService;
 
+        @org.springframework.beans.factory.annotation.Value("${app.frontend.url}")
+        private String frontendUrl;
+
         // ================= LOGIN =================
         @PostMapping("/login")
         public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -181,8 +184,8 @@ public class AuthController {
                 tokenRepository.save(myToken);
 
                 // Send Email
-                // Construct link (hardcoded frontend URL for now, or from properties)
-                String resetLink = "http://localhost:3000/reset-password?token=" + token;
+                // Construct link
+                String resetLink = frontendUrl + "/reset-password?token=" + token;
 
                 emailService.sendEmail(
                                 user.getEmail(),

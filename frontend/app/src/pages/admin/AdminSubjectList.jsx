@@ -110,7 +110,7 @@ const AdminSubjectList = () => {
                       <td>
                         {subj.schedulePath ? (
                           <a
-                            href={`http://localhost:8080/api${subj.schedulePath}`}
+                            href={`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}${subj.schedulePath}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="btn btn-sm btn-info text-white"
