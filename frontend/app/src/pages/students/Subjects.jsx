@@ -105,7 +105,7 @@ const Subjects = () => {
                     <td className="text-center">
                       {s.schedulePath ? (
                         <a
-                          href={`http://localhost:8080/api${s.schedulePath}`}
+                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}${s.schedulePath}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn btn-sm btn-outline-primary"

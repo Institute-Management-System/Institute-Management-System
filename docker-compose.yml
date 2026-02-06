@@ -1,0 +1,85 @@
+services:
+  backend:
+    build:
+      context: ./Backend/Institute_Management_System
+      dockerfile: Dockerfile
+    container_name: ims-backend
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms256m -Xmx400m
+      - DB_URL=jdbc:mysql://db:3306/ims?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - DB_USERNAME=root
+      - DB_PASSWORD=manager
+      # External URLs
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:8080/api}
+      - LOGGER_URL=http://logger:5000/api/log
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ims-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend:
+    build:
+      context: ./frontend/app
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=/api
+        - VITE_LOGGER_URL=/logger/api/log
+    container_name: ims-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - logger
+    networks:
+      - ims-network
+
+  logger:
+    build:
+      context: ./LoggerService
+      dockerfile: Dockerfile
+    container_name: ims-logger
+    ports:
+      - "5000:5000"
+    networks:
+      - ims-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  db:
+    image: mysql:8.0
+    container_name: ims-db
+    environment:
+      MYSQL_ROOT_PASSWORD: manager
+      MYSQL_DATABASE: ims
+    command: --innodb-buffer-pool-size=128M
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ims-network
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+networks:
+  ims-network:
+    driver: bridge
+
+volumes:
+  db_data:

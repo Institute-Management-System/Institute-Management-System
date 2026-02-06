@@ -22,6 +22,9 @@ public class ProfileController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @org.springframework.beans.factory.annotation.Value("${app.backend.url}")
+    private String backendUrl;
+
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
@@ -107,7 +110,7 @@ public class ProfileController {
             userRepository.save(user);
 
             return ResponseEntity
-                    .ok(java.util.Collections.singletonMap("imageUrl", "http://localhost:8080/api" + imageUrl));
+                    .ok(java.util.Collections.singletonMap("imageUrl", backendUrl + imageUrl));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Failed to upload image: " + e.getMessage());

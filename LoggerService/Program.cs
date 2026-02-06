@@ -43,7 +43,7 @@ app.MapPost("/api/log", async ([FromBody] LogEntry log) =>
     return Results.Ok(new { status = "Logged" });
 });
 
-app.Run("http://localhost:5000");
+app.Run("http://0.0.0.0:5000");
 
 // Record type for incoming JSON
 record LogEntry(string source, string level, string message);
